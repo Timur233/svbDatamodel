@@ -1,0 +1,73 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
+
+:root {
+    --base-padding: 8px; 
+    --title-padding: 8px; 
+    --font-size: 12px; 
+    --font-size-header: 12px; 
+    --buttons-padding: 4px 12px; 
+    --buttons-height: 25px; 
+    --font-family: 'Roboto', sans-serif;
+    --main-color: #00A0E3;
+    --second-color: #154179;
+    --second-color-light:
+      rgba(102, 0, 0, 0.13); 
+    --window-header-bg: #0a2342;
+    --table-cell-padding: 4px 4px
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+}
+
+#contentBlock {
+    position: relative;
+    display: block;
+    height: 100vh;
+    margin: 0;
+    padding: 8px;
+}
+
+.svbWindow {
+    position: relative !important;
+}
+
+.test-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.profile__preview {
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+}
+
+.profile__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: #d3a27f;
+    border-radius: 50%;
+}
+
+.profile__preview:before {
+    position: relative;
+    content: '';
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid #484848;
+    vertical-align: middle;
+    transition: transform .18s;
+}
