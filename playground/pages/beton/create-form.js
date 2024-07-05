@@ -176,7 +176,7 @@ async function renderForm(DM, contentBlock, saveCallback) {
     
     DM.watch('mainproject', (value) => {
         const storage = svbForm.getAttribute('mainproject').getInstance()
-            .state.additionalInfo.storage;
+            .state?.additionalInfo?.storage;
 
         DM.model.project = null;
 
@@ -194,18 +194,19 @@ async function renderForm(DM, contentBlock, saveCallback) {
             ]
         });
 
-        getStorageData(storage.v)
-            .then(data => {
-                const { instance } = data.result.catalog.storages;
-                const ourFirm = {
-                    r: instance.attr.ourfirm.r,
-                    v: instance.attr.ourfirm.v,
-                }
-
-                DM.model.ourfirm = ourFirm;
-                DM.model.storage = storage;
-            })
-        
+        if (storage?.v) {
+            getStorageData(storage.v)
+                .then(data => {
+                    const { instance } = data.result.catalog.storages;
+                    const ourFirm = {
+                        r: instance.attr.ourfirm.r,
+                        v: instance.attr.ourfirm.v,
+                    }
+    
+                    DM.model.ourfirm = ourFirm;
+                    DM.model.storage = storage;
+                })
+        }
     });
     
     svbForm.getInstance().state.attributes.forEach(attr => {
@@ -271,36 +272,20 @@ async function initPage() {
         })
     } else {
         const request = await getInstance(docUuid);
-        const instanceData = request.result.document.instance.attr;;
-
-        DM.model.ourfirm = instanceData.ourfirm;
-        DM.model.mainproject = instanceData.mainproject;
-        DM.model.project = instanceData.project;
-        DM.model.floor = instanceData.floor;
-        DM.model.constructives = instanceData.constructive;
-        DM.model.quantity = instanceData.quantity;
-        DM.model.concretepump = instanceData.concretepump;
-        DM.model.docdate = instanceData.docdate;
-        DM.model.createDate = instanceData.constructive;
-        DM.model.author = instanceData.constructive;
+        const instanceData = request.result.document.concreterequisitions.instance.attr;
 
         await renderForm(DM, contentBlock, async () => { 
-            return await insertAction({
+            return await updateAction(DM.model.uuid, {
                 "floor": DM.model.floor,
-                "docdate": new Date(DM.model.createDate).toISOString().split('T')[0],
                 "ourfirm": DM.model.ourfirm.v,
                 "project": DM.model.project.v,
                 "storage": DM.model.storage.v,
                 "concrete": DM.model.concrete.v,
-                "inserter": null,
                 "quantity": DM.model.quantity,
-                "docnumber": null,
                 "mainproject": DM.model.mainproject.v,
                 "concretepump": DM.model.concretepump.v,
                 "constructive": DM.model.constructives.v,
                 "purchasedate": new Date(DM.model.docdate).toISOString().split('T')[0],
-                "writeoffitem": "132538d4-96dc-4b91-b3f7-d61b58d0226e",
-                "draft": false
             })
                 .then(res => {
                     console.log(res);
@@ -310,7 +295,21 @@ async function initPage() {
                             message: 'success' 
                         });
                 })
-        })
+        });
+
+        DM.model.uuid = instanceData.uuid,
+        DM.model.ourfirm = instanceData.ourfirm;
+        DM.model.storage = instanceData.storage;
+        DM.model.mainproject = instanceData.mainproject;
+        DM.model.project = instanceData.project;
+        DM.model.floor = instanceData.floor;
+        DM.model.constructives = instanceData.constructive;
+        DM.model.quantity = instanceData.quantity;
+        DM.model.concretepump = instanceData.concretepump;
+        DM.model.concrete = instanceData.concrete;
+        DM.model.docdate = new Date(instanceData.purchasedate).toISOString().slice(0, 16);
+        DM.model.createDate = new Date(instanceData.insertdate).toISOString().slice(0, 16);
+        DM.model.author = instanceData.inserter;
     }
 
 }
@@ -432,6 +431,38 @@ async function insertAction(data) {
             "reqoptions": {
                 "datatype": "instance",
                 "instance": "",
+                "name": "concreterequisitions",
+                "data": {
+                    "instance": data,
+                    "tables": {}
+                },
+                "lang": "ru"
+            },
+            "resoptions": {
+                "metadata": false,
+                "view": false,
+                "data": true,
+                "dataparams": {
+                    "header": true
+                }
+            }
+        })
+    })
+        .then(res => res.json())
+        .catch(e => e)
+}
+
+async function updateAction(uuid, data) {
+    return await fetch('https://cab.qazaqstroy.kz/svbapi', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            "session": window.session,
+            "type": "document",
+            "action": "update",
+            "reqoptions": {
+                "datatype": "instance",
+                "instance": uuid,
                 "name": "concreterequisitions",
                 "data": {
                     "instance": data,
