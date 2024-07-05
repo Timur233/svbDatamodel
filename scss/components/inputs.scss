@@ -1,0 +1,46 @@
+.svb-input {
+    position: relative;
+
+    &__input, &__text, &__catalog {
+        width: 100%;
+
+        &::-webkit-inner-spin-button, 
+        &::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+    }
+    
+    &__slot {
+        position: absolute;
+        top: 25px;
+        transform: translateY(-50%);
+
+        color: rgba(107, 122, 128, 1);
+        font-size: 13px;
+        right: 12px;
+
+        &--end {
+            right: 12px;
+        }
+    }
+
+    &--catalog {
+        & .svb-input__slot{
+            right: 36px;
+        }
+
+        &:after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: 16px;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent; 
+            border-right: 5px solid transparent; 
+            border-top: 5px solid #000;
+        }
+    }
+}

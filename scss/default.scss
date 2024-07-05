@@ -1,0 +1,19 @@
+body {
+    font-family: "Inter", sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+}
+
+element {
+    touch-action: pan-x pan-y; 
+}
+
+input, select, textarea, button {
+    font-family: "Inter", sans-serif;
+    font-size: 14px;
+}
+
+sup {
+    font-size: smaller;
+    vertical-align: super;
+}

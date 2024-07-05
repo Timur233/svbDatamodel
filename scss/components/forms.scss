@@ -1,0 +1,30 @@
+.svb-form {
+    &__filed:not(:last-child) {
+        margin-bottom: 12px;
+    }
+}
+
+.svb-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    &__label {
+        font-size: 14px;
+        color: #4B5563;
+
+        &--requared::after {
+            content: '*';
+            color: rgba(253, 78, 93, 1);
+        }
+    }
+}
+
+.buttons-group {
+    display: flex;
+    gap: 8px;
+
+    &--column {
+        flex-direction: column;
+    }
+}

@@ -1,0 +1,40 @@
+@import url("./reset.scss");
+@import url("./font.scss");
+@import url("./default.scss");
+@import url("./dev-wrapper.scss");
+@import url("./components/forms.scss");
+@import url("./components/inputs.scss");
+@import url("./components/select.scss");
+@import url("./components/buttons.scss");
+
+input, select, textarea {
+    border: 1px solid #D1D5DB;
+    border-radius: 8px;
+    padding: 16px;
+    font-size: 14px;
+    line-height: 1.143;
+    font-family: inherit;
+    outline: none !important;
+    transition: border-color .20s;
+}
+
+input:active, select:active, textarea:active,
+input:focus, select:focus, textarea:focus {
+    border-color: #00a0e3;
+}
+
+textarea::-webkit-scrollbar {
+    width: 4px;
+}
+
+textarea::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+textarea::-webkit-scrollbar-thumb {
+    background: #888;
+}
+
+textarea::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
