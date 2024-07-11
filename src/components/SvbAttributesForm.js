@@ -9,6 +9,8 @@ class SvbAttributesForm extends SvbElement {
         }
 
         this.init();
+
+        console.log(this);
     }
 
     init() {
@@ -25,6 +27,33 @@ class SvbAttributesForm extends SvbElement {
 
     getAttribute(name) {
         return this.state.attributes.find(i => i.descriptor === name)?.input;
+    }
+
+    validateForm() {
+        let hasError = false;
+
+        this.state.attributes.forEach(attr => {
+            const attrSettings = attr.settings;
+            const attrValue = attr.input.getValue();
+
+            switch (attrSettings.type) {
+                case 'catalog':
+                    const attrValidate = !!attrValue?.v;
+
+                    if (attrValidate === false) {
+                        
+                    }
+
+                    break;
+            
+                default:
+                    hasError = !attrValue;
+
+                    break;
+            }
+        });
+
+        return hasError;
     }
 
     renderFields() {

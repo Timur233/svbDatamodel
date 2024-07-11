@@ -76,7 +76,6 @@ class SvbInputCatalog extends BaseInput {
 
             this.inputMethod(event);
             this.state.tempValue = '';
-            this.fragment.utilityObject.showDropdown();
             this.component.dispatchEvent(customEvent);
 
             return false;
@@ -102,16 +101,19 @@ class SvbInputCatalog extends BaseInput {
 
         if (this.loader) this.loader.addStyles({ display: 'block' });
 
+        this.showLoader();
+
         SvbElement.debounce(this.searchHandling, 500, (res) => {
             this.fragment.utilityObject.loadList(res.map(item => ({
                 r:              item.represent,
                 v:              item.uuid,
                 additionalInfo: item,
             })));
-        })(this._typeObjectName, this.state.tempValue, this.state.filters);
+            this.hideLoader();
+            this.fragment.utilityObject.showDropdown();
+        })(this._typeObjectName, this._typeObject, this.state.tempValue, this.state.filters);
 
         this.eventInput(event, this.component);
-        this.fragment.utilityObject.showDropdown();
     }
 
     getValue() {
@@ -140,6 +142,14 @@ class SvbInputCatalog extends BaseInput {
 
     setFilters(filters) {
         this.state.filters = filters;
+    }
+
+    showLoader() {
+        this.component.classList.add('svb-input--show-loader');
+    }
+
+    hideLoader() {
+        this.component.classList.remove('svb-input--show-loader');
     }
 
     renderDropdown() {

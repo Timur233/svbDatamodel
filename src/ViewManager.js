@@ -115,6 +115,10 @@ class ViewManager {
 
         return form.component;
     }
+
+    fileUploader (title) {
+        return SvbComponent.fileUploader(title);
+    }
 }
 
 export default ViewManager;

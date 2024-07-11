@@ -6,6 +6,7 @@ class BaseInput extends SvbElement {
 
         this._type = settings?.type || 'text';
         this._typeObjectName = settings?.typeObjectName;
+        this._typeObject = settings?.typeObject || 'catalog';
         this.component = null;
 
         this.settings = {

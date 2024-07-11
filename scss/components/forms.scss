@@ -1,4 +1,8 @@
 .svb-form {
+    padding: 16px;
+    border-radius: 8px;
+    background: #fff;
+
     &__filed:not(:last-child) {
         margin-bottom: 12px;
     }

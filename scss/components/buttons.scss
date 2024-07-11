@@ -5,7 +5,7 @@
     gap: 8px;
 
     font-family: 'Inter';
-    padding: 13px 14px;
+    padding: 13px 18px;
     font-size: 16px;
     font-weight: 400;
     line-height: 1.375;
@@ -29,6 +29,21 @@
 
     transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out;
 
+    &--size-m {
+        font-size: 14px;
+        padding: 7px 18px;
+    }
+
+    &--outline {
+        background-color: #fff;
+        border-color: rgba(0, 160, 227, 1);
+        color: rgba(0, 160, 227, 1);
+
+        & svg path {
+            stroke: rgba(0, 160, 227, 1)
+        }
+    }
+
     &--primary {
         border-color: rgba(0, 160, 227, 1);
         background-color: rgba(0, 160, 227, 1);
@@ -39,6 +54,16 @@
         border-color: rgba(222, 228, 232, 1);
         background-color: rgba(222, 228, 232, 1);
         color: #333;
+    }
+
+    &--white {
+        border-color: rgb(255, 255, 255);
+        background-color: rgb(255, 255, 255);
+        color: #333;
+    }
+
+    &--color-blue {
+        color: rgba(0, 160, 227, 1);
     }
 
     &--color-red {

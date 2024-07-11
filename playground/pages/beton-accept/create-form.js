@@ -8,66 +8,56 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 async function renderForm(DM, contentBlock, saveCallback) {
+    const pageTitle = DM.vm.custom({
+        descriptor: 'pageTitle',
+        render: () => {
+            return `
+                <span class="page-title">${DM.model.pagetitle}</span>
+            `
+        }
+    });
+    const fileUploader = DM.vm.fileUploader('Фото зеленки');
     const svbForm = DM.vm.form({
         attributes: [
             {
-                label: 'Объект',
-                descriptor: 'mainproject',
+                label: 'Заявка',
+                descriptor: 'concreterequisition',
                 settings: {
                     type: 'catalog',
-                    typeObjectName: 'projects',
+                    typeObject: 'document',
+                    typeObjectName: 'concreterequisitions',
                     placeholder: 'Начните вводить',
                     filters: {
-                        static: [
-                            {
-                                preoperator: 'AND',
-                                attribute: 'isfolder',
-                                filteralias: 'Это блок?',
-                                predicate: '=',
-                                value: true,
-                                postoperator: '',
-                                represent: true
-                            }
-                        ]
+                        static: []
                     }
                 }
             },
             {
-                label: 'Блок',
-                descriptor: 'project',
+                label: 'Оси',
+                descriptor: 'comment',
                 settings: {
-                    type: 'catalog',
-                    typeObjectName: 'projects',
-                    placeholder: 'Начните вводить',
-                    filters: {
-                        static: [
-                            {
-                                preoperator: 'AND',
-                                attribute: 'isfolder',
-                                filteralias: 'Это блок?',
-                                predicate: '=',
-                                value: true,
-                                postoperator: '',
-                                represent: true
-                            }
-                        ]
-                    }
+                    type: 'text',
+                    placeholder: 'Введите текст',
                 }
             },
             {
-                label: 'Этаж',
-                descriptor: 'floor',
+                label: 'Фактический объем',
+                descriptor: 'quantity',
                 settings: {
                     type: 'number',
-                    placeholder: 'Укажите этаж',
+                    placeholder: '0',
+                    slots: [{
+                        title: 'В кубических метрах',
+                        content: 'М<sup>3</sup>'
+                    }]
                 }
             },
             {
-                label: 'Марка бетона',
-                descriptor: 'concrete',
+                label: 'Поставщик',
+                descriptor: 'contractor',
                 settings: {
                     type: 'catalog',
-                    typeObjectName: 'nomenclature',
+                    typeObjectName: 'organizations',
                     placeholder: 'Начните вводить',
                     filters: {
                         static: [
@@ -82,57 +72,7 @@ async function renderForm(DM, contentBlock, saveCallback) {
                         ]
                     }
                 }
-            },
-            {
-                label: 'Конструктив',
-                descriptor: 'constructives',
-                settings: {
-                    type: 'catalog',
-                    typeObjectName: 'constructives',
-                    placeholder: 'Начните вводить',
-                    filters: {
-                        static: [
-                            {
-                                preoperator: 'AND',
-                                attribute: 'forconcrete',
-                                filteralias: 'Это блок?',
-                                predicate: '=',
-                                value: true,
-                                postoperator: '',
-                                represent: true
-                            }
-                        ]
-                    }
-                }
-            },
-            {
-                label: 'Объем',
-                descriptor: 'quantity',
-                settings: {
-                    type: 'number',
-                    placeholder: 'Объем',
-                    slots: [{
-                        content: 'М<sup>3</sup>'
-                    }]
-                }
-            },
-            {
-                label: 'Автобетононасос',
-                descriptor: 'concretepump',
-                settings: {
-                    type: 'catalog',
-                    typeObjectName: 'concretepumptypes',
-                    placeholder: 'Начните вводить',
-                }
-            },
-            {
-                label: 'Дата и время доставки',
-                descriptor: 'docdate',
-                settings: {
-                    type: 'datetime-local',
-                    placeholder: '17.04.2024 15:00:00',
-                }
-            },
+            }
         ]
     });
     const summary = DM.vm.custom({
@@ -154,71 +94,130 @@ async function renderForm(DM, contentBlock, saveCallback) {
             `
         }
     });
+    const remindsComment = DM.vm.custom({
+        descriptor: 'remindsComment',
+        render: function () {
+            const div = SvbElement.create('div', null, '');
+            const title = SvbElement.create('span', null, 'reminds-form__title', 'Передача остатка');
+            const form = SvbElement.create('div', null, 'reminds-form');
+            const label = SvbElement.create('label', null, 'reminds-form__label', 'Комментарий');
+            const note = SvbElement.create('label', null, 'reminds-form__note', 'Укажите куда передали бетон: блок, этаж, конструктив, оси, объем...');
+            const textarea = SvbElement.create('textarea', null, 'reminds-form__input');
+
+            textarea.placeholder = 'Введите текст';
+            textarea.textContent = DM.model.remindsComment || '';
+            textarea.addEventListener('change', () => {           
+                if (this.wrapper)
+                    this.wrapper.getValue = () => { return textarea.value }
+
+                this.wrapper.dispatchEvent(new CustomEvent('svb:change'));
+            });
+
+            form.appendChild(label);
+            form.appendChild(textarea);
+            form.appendChild(note);
+
+            div.appendChild(title);
+            div.appendChild(form);
+
+            return div;
+        },
+        update: function (value) {
+            const textarea = this.wrapper.querySelector('textarea');
+
+            textarea.textContent = value;
+        }
+    });
     const buttonsGroup = SvbElement.create('div', null, 'app-form__buttons-group buttons-group buttons-group--column');
     const saveButton = SvbElement.create('button', null, 'btn btn--primary', 'Сохранить');
-    const clearButton = SvbElement.create('button', null, 'btn btn--cancel btn--color-red', 'Сброс');
+    const plusIcon = `
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 8V16V8ZM16 12H8H16Z" fill="#00A0E3"/>
+            <path d="M12 8V16M16 12H8" stroke="#00A0E3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2.5 12C2.5 7.52166 2.5 5.28249 3.89124 3.89124C5.28249 2.5 7.52166 2.5 12 2.5C16.4783 2.5 
+            18.7175 2.5 20.1088 3.89124C21.5 5.28249 21.5 7.52166 21.5 12C21.5 16.4783 21.5 18.7175 20.1088 
+            20.1088C18.7175 21.5 16.4783 21.5 12 21.5C7.52166 21.5 5.28249 21.5 3.89124 20.1088C2.5 18.7175 
+            2.5 16.4783 2.5 12Z" stroke="#00A0E3" stroke-width="1.5"/>
+        </svg>    
+    `;
+    const remindsButton = SvbElement.create('button', null, 'btn btn--white btn--color-blue', plusIcon + ' Передать остаток');
+
+    remindsComment.style.display = 'none';
 
     saveButton.addEventListener('click', async () => {
         await saveCallback();
     })
     
-    clearButton.addEventListener('click', () => {
-        DM.model.mainproject = null;
-        DM.model.project = null;
-        DM.model.floor = null;
-        DM.model.constructives = null;
-        DM.model.quantity = null;
-        DM.model.concretepump = null;
-        DM.model.docdate = null;
+    remindsButton.addEventListener('click', () => {
+        remindsButton.style.display = 'none';
+        remindsComment.style.display = '';
     })
     
+    buttonsGroup.appendChild(remindsButton);
     buttonsGroup.appendChild(saveButton);
-    buttonsGroup.appendChild(clearButton);
-    
-    DM.watch('mainproject', (value) => {
-        const storage = svbForm.getAttribute('mainproject').getInstance()
-            .state?.additionalInfo?.storage;
-
-        DM.model.project = null;
-
-        svbForm.getAttribute('project').setFilters({
-            static: [
-                {
-                    preoperator: 'AND',
-                    attribute: 'folder',
-                    filteralias: 'Основной проект',
-                    predicate: '=',
-                    value: value?.v,
-                    postoperator: '',
-                    represent: true
-                }
-            ]
-        });
-
-        if (storage?.v) {
-            getStorageData(storage.v)
-                .then(data => {
-                    const { instance } = data.result.catalog.storages;
-                    const ourFirm = {
-                        r: instance.attr.ourfirm.r,
-                        v: instance.attr.ourfirm.v,
-                    }
-    
-                    DM.model.ourfirm = ourFirm;
-                    DM.model.storage = storage;
-                })
-        }
-    });
     
     svbForm.getInstance().state.attributes.forEach(attr => {
         const inputInstance = attr.input.getInstance();
         
         inputInstance.searchHandling = catalogHelper
     });
+
+    fileUploader.getInstance()
+        .loadMethod = filesActions().upload
     
+    contentBlock.appendChild(pageTitle);
+    contentBlock.appendChild(fileUploader);
     contentBlock.appendChild(svbForm);
+    contentBlock.appendChild(remindsComment);
     contentBlock.appendChild(summary);
     contentBlock.appendChild(buttonsGroup);
+
+    document.body.appendChild(SvbElement.create('style', null, null, `
+        .page-title {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 16px;
+        }
+
+        .reminds-form__title {
+            display: block;
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 16px;
+        }
+        
+        .reminds-form {
+            display: flex;
+            flex-direction: column;
+            background: #fff;
+            padding: 16px;
+            border-radius: 8px;
+        }
+        
+        .reminds-form__label {
+            font-size: 14px;
+            color: rgba(107, 122, 128, 1);
+            margin-bottom: 4px;
+        }
+        
+        .reminds-form__label:after {
+            /* content: '*'; */
+            color: red;
+        }
+        
+        .reminds-form__input {
+            border: 1px solid rgba(209, 213, 219, 1);
+            height: 153px;
+            width: 100%;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+        
+        .reminds-form__note {
+            font-size: 14px;
+            color: rgba(156, 163, 175, 1);
+        }
+    `))
 }
 
 async function initPage() { 
@@ -227,19 +226,18 @@ async function initPage() {
     const contentBlock = document.querySelector('#content-block');
     const userData     = await checkSession(session);
     const DM           = new SvbModel({
-        ourfirm: null,
-        mainproject: null,
-        project: null,
-        floor: null,
-        constructives: null,
+        pagetitle: 'Приемка',
+        concreterequisition: null,
+        comment: null,
         quantity: null,
-        concretepump: null,
-        docdate: null,
+        contractor: null,
+        remindsComment: null,
+        docdate: new Date(),
         createDate: new Date()
             .toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })
             .replace(/\//g, '.'),
         author: { r: userData.represent, v: userData.uuid },
-    }, 'doc', 'concreterequisitions');
+    }, 'doc', 'goodsreceipts');
 
     window.session = session;
     window.preloader = SvbComponent.pagePreloader('Загрузка', '');
@@ -432,6 +430,13 @@ async function getStorageData(uuid) {
     })
         .then(res => res.json())
         .catch(e => e)
+}
+
+function filesActions() {
+    return {
+        upload: async (a,b,c) => {console.log(a,b,c)},
+        remove: async () => {}
+    }
 }
 
 async function insertAction(data) {

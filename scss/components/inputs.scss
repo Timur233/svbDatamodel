@@ -10,6 +10,10 @@
             margin: 0; 
         }
     }
+
+    &__catalog {
+        padding-right: 40px;
+    }
     
     &__slot {
         position: absolute;
@@ -41,6 +45,34 @@
             border-left: 5px solid transparent; 
             border-right: 5px solid transparent; 
             border-top: 5px solid #000;
+        }
+        
+        &.svb-input--show-loader {
+            &:after {
+                display: none;
+            }
+
+            &::before {
+                content: '';
+                position: absolute;
+                top: 50%;
+                margin-top: -7px;
+                right: 14px;
+                width: 14px;
+                height: 14px;
+                aspect-ratio: 1;
+                border-radius: 50%;
+                background: 
+                    radial-gradient(farthest-side,rgba(0, 160, 227, 1) 94%,rgba(0, 160, 227, 1)) top/2px 2px no-repeat,
+                    conic-gradient(#0000 25%, rgba(0, 160, 227, 1) 25%, rgba(0, 160, 227, 1));
+                -webkit-mask: radial-gradient(farthest-side,#0000 calc(100% - 2px),#000 0);
+                animation: l13 1s infinite linear;
+            }
+
+            @keyframes l13{ 
+                100%{transform: rotate(1turn)}
+            }
+            
         }
     }
 }
