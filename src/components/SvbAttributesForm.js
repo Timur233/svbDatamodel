@@ -1,4 +1,4 @@
-import SvbElement from "./SvbElement";
+import SvbElement from './SvbElement';
 
 class SvbAttributesForm extends SvbElement {
     constructor (attributes) {
@@ -6,63 +6,87 @@ class SvbAttributesForm extends SvbElement {
 
         this.state = {
             attributes
-        }
+        };
 
         this.init();
 
         console.log(this);
     }
 
-    init() {
+    init () {
         this.component = SvbElement.create('div', null, 'svb-form svb-attributes-form');
 
         this.render();
         this.publicMethods();
     }
 
-    publicMethods() {
+    publicMethods () {
         this.component.getInstance = this.getInstance.bind(this);
         this.component.getAttribute = this.getAttribute.bind(this);
+        this.component.validate = this.validate.bind(this);
+        this.component.disable = this.disable.bind(this);
+        this.component.enable = this.enable.bind(this);
     }
 
-    getAttribute(name) {
+    getAttribute (name) {
         return this.state.attributes.find(i => i.descriptor === name)?.input;
     }
 
-    validateForm() {
+    validate () {
         let hasError = false;
 
-        this.state.attributes.forEach(attr => {
+        this.state.attributes.forEach((attr) => {
             const attrSettings = attr.settings;
             const attrValue = attr.input.getValue();
 
-            switch (attrSettings.type) {
-                case 'catalog':
-                    const attrValidate = !!attrValue?.v;
+            if (attrSettings.required) {
+                let valueInBool = true;
 
-                    if (attrValidate === false) {
-                        
-                    }
+                switch (attrSettings.type) {
+                    case 'catalog':
+                        valueInBool = !!attrValue?.v;
 
-                    break;
-            
-                default:
-                    hasError = !attrValue;
+                        break;
 
-                    break;
+                    default:
+                        valueInBool = !!attrValue;
+
+                        break;
+                }
+
+                if (valueInBool === false) {
+                    hasError = true;
+                    attr.input.emitError();
+                }
             }
         });
 
-        return hasError;
+        return !hasError;
     }
 
-    renderFields() {
-        this.state .attributes.forEach(attribute => {
-            const wrapper = SvbElement.create('div', null, 'svb-form__filed svb-field');
-            const label   = SvbElement.create('label', null, 'svb-field__label', attribute?.label);
+    disable (descriptor = null) {
+        this.state.attributes.forEach((attr) => {
+            if (descriptor === null || attr.descriptor === descriptor) { attr.input.disable(); }
+        });
+    }
 
-            if (attribute?.label !== undefined)
-                wrapper.appendChild(label);
+    enable (descriptor = null) {
+        this.state.attributes.forEach((attr) => {
+            if (descriptor === null || attr.descriptor === descriptor) { attr.input.enable(); }
+        });
+    }
+
+    renderFields () {
+        this.state.attributes.forEach((attribute) => {
+            const wrapper = SvbElement.create('div', null, 'svb-form__filed svb-field');
+            const label   = SvbElement.create(
+                'label',
+                null,
+                `svb-field__label ${attribute?.settings?.required ? 'svb-field__label--requared' : ''}`,
+                attribute?.label
+            );
+
+            if (attribute?.label !== undefined) { wrapper.appendChild(label); }
 
             wrapper.appendChild(attribute.input);
 
@@ -71,7 +95,7 @@ class SvbAttributesForm extends SvbElement {
         });
     }
 
-    render() {
+    render () {
         this.renderFields();
 
         return this.component;

@@ -1,38 +1,38 @@
-import BaseInput from "./BaseInput";
-import SvbDropdown from "../SvbDropdown";
-import SvbElement from "../SvbElement";
+import BaseInput from './BaseInput';
+import SvbDropdown from '../SvbDropdown';
+import SvbElement from '../SvbElement';
 
 class SvbInputCatalog extends BaseInput {
-    constructor(viewSetting, classList) {
+    constructor (viewSetting, classList) {
         super(viewSetting, classList);
 
         this.state.tempValue = '';
-        this.state.filters = viewSetting?.filters || null,
+        this.state.filters = viewSetting?.filters || null;
 
         this.init();
     }
 
-    init() {
+    init () {
         this.component.classList.add('svb-input--catalog');
         this.loader = null;
 
         this.component.setFilters = this.setFilters.bind(this);
         this.searchHandling = () => {};
         this.eventChange = (event) => {
-            const customEvent = new CustomEvent(`svb:change`, {
+            const customEvent = new CustomEvent('svb:change', {
                 bubbles:    true,
                 cancelable: true,
                 event
             });
-        
+
             return this.component.dispatchEvent(customEvent);
-        }
-        
+        };
+
         this.render();
         this.inputEvents();
     }
 
-    inputEvents() {
+    inputEvents () {
         this.event('keydown', this.input, (event) => {
             if (event.key === 'ArrowUp' || event.keyCode === 38 || event.which === 38) {
                 event.preventDefault();
@@ -68,7 +68,7 @@ class SvbInputCatalog extends BaseInput {
         });
 
         this.event('click', this.input, (event) => {
-            const customEvent = new CustomEvent(`svb:click`, {
+            const customEvent = new CustomEvent('svb:click', {
                 bubbles:    true,
                 cancelable: true,
                 event
@@ -82,21 +82,25 @@ class SvbInputCatalog extends BaseInput {
         });
 
         this.event('input', this.input, (event) => {
-            const customEvent = new CustomEvent(`svb:input`, {
+            const customEvent = new CustomEvent('svb:input', {
                 bubbles:    true,
                 cancelable: true,
                 event
             });
-            
+
             this.state.tempValue = this.input.value;
             this.inputMethod(event);
             this.component.dispatchEvent(customEvent);
 
             return false;
         });
+
+        this.input.addEventListener('blur', (event) => {
+            this.input.value = this.state?.represent || '';
+        });
     }
 
-    inputMethod(event) {
+    inputMethod (event) {
         event.preventDefault();
 
         if (this.loader) this.loader.addStyles({ display: 'block' });
@@ -107,23 +111,24 @@ class SvbInputCatalog extends BaseInput {
             this.fragment.utilityObject.loadList(res.map(item => ({
                 r:              item.represent,
                 v:              item.uuid,
-                additionalInfo: item,
+                additionalInfo: item
             })));
             this.hideLoader();
             this.fragment.utilityObject.showDropdown();
         })(this._typeObjectName, this._typeObject, this.state.tempValue, this.state.filters);
 
         this.eventInput(event, this.component);
+        this.hideError();
     }
 
-    getValue() {
+    getValue () {
         return {
             r: this.state.represent,
             v: this.state.value
-        }
+        };
     }
 
-    setValue(value) {
+    setValue (value) {
         if (value === null) {
             this.state.value = '';
             this.state.represent = '';
@@ -140,23 +145,23 @@ class SvbInputCatalog extends BaseInput {
         this.eventSet();
     }
 
-    setFilters(filters) {
+    setFilters (filters) {
         this.state.filters = filters;
     }
 
-    showLoader() {
+    showLoader () {
         this.component.classList.add('svb-input--show-loader');
     }
 
-    hideLoader() {
+    hideLoader () {
         this.component.classList.remove('svb-input--show-loader');
     }
 
-    renderDropdown() {
+    renderDropdown () {
         if (!this.fragment) {
             this.fragment = new SvbDropdown({
                 list:  [],
-                class: 'svb-input__dropdown',
+                class: 'svb-input__dropdown'
             });
 
             this.fragment.utilityObject.eventClick = (event) => {
@@ -192,7 +197,7 @@ class SvbInputCatalog extends BaseInput {
         }
     }
 
-    renderInput() {
+    renderInput () {
         this.input.type = 'text';
         this.input.value = this.state.represent;
         this.input.placeholder = this.state.placeholder || 'Начните вводить текст';
@@ -203,7 +208,7 @@ class SvbInputCatalog extends BaseInput {
         this.renderDropdown();
 
         this.input.addStyles({
-            textAlign: this.settings.textAlign,
+            textAlign: this.settings.textAlign
         });
     }
 }

@@ -29,6 +29,18 @@
         }
     }
 
+    &--disabled {
+        & input {
+            background-color: rgba(243, 244, 246, 1);
+        }
+    }
+
+    &--error {
+        & input {
+            border-color: #FF4443;
+        }
+    }
+
     &--catalog {
         & .svb-input__slot{
             right: 36px;

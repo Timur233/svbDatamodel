@@ -33,16 +33,16 @@ class ViewManager {
             descriptor: componentData.descriptor,
             wrapper:    componentData.wrapper,
             methods:    componentData.methods,
-            reactor:  this.dataModel.addReactor({
-                descriptor:  componentData.descriptor,
-                emitEvent:   componentData.methods.update,
+            reactor:    this.dataModel.addReactor({
+                descriptor: componentData.descriptor,
+                emitEvent:  componentData.methods.update
             })
         };
 
         if (componentData.wrapper.addEventListener) {
             componentData.wrapper.addEventListener('svb:change', (event) => {
-                component.reactor.set(componentData.wrapper.getValue())
-            })
+                component.reactor.set(componentData.wrapper.getValue());
+            });
         }
 
         this.components.push(component);
@@ -64,7 +64,7 @@ class ViewManager {
             const component = componentData.render(this.dataModel.getValueByDescriptor(componentData.descriptor));
             const componentWrapper = SvbComponent.customComponent('div', componentData.descriptor, id);
             const componentObject = this.appendComponent({
-                id:         id,
+                id,
                 wrapper:    componentWrapper,
                 descriptor: componentData.descriptor,
                 methods:    {
@@ -77,7 +77,7 @@ class ViewManager {
 
             componentData.component = component;
             componentData.wrapper = componentWrapper;
-            componentData.eventChange = componentObject.reactor.set
+            componentData.eventChange = componentObject.reactor.set;
             componentWrapper.setContent(component);
 
             return componentWrapper;
@@ -94,22 +94,22 @@ class ViewManager {
             descriptor: componentData.descriptor,
             methods:    {
                 render: input.render(),
-                update: (value) => { input.setValue(value) },
+                update: (value) => { input.setValue(value); }
             }
         });
 
-        input.setValue(this.dataModel.getValueByDescriptor(componentData.descriptor))
+        input.setValue(this.dataModel.getValueByDescriptor(componentData.descriptor));
 
         return input.component;
     }
 
     form (componentData) {
         const compoenntId = componentData.id || Math.floor(Math.random() * (234234234 + 1)).toString();
-        const attributes = componentData.attributes.map(attr => { 
+        const attributes = componentData.attributes.map((attr) => {
             return {
                 ...attr,
                 input: this.input(attr)
-            } 
+            };
         });
         const form = SvbComponent.attributesForm(attributes);
 

@@ -1,11 +1,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Playground</title>
     <script>
-        window.svbReqOptions = { uuid: '34f6b5e5-f03e-462e-927d-6495dc0bc876' }
-        document.cookie = 'session=d4b00fd3-c35d-4632-ae76-f62fdab2bd6b';    
+        window.svbReqOptions = { uuid: 'new' } // 18375788-5a30-4ff7-a77e-182441ca9019
+        document.cookie = 'session=2b68d55a-2387-4b52-9f43-e1fbf6d99c5e';    
         window.flutter_inappwebview = { callHandler: () => {} }
     </script>
     <script type="module" src="./create-form.js"></script>
@@ -14,7 +14,23 @@
     <div id="content-block" class="wrapper">
     </div>
     <script>
-        
+      document.addEventListener('touchstart', function(event) {
+        if (event.touches.length > 1) {
+          event.preventDefault(); 
+        }
+      }, { passive: false });
+  
+      document.addEventListener('gesturestart', function(event) {
+        event.preventDefault(); 
+      });
+  
+      document.addEventListener('gesturechange', function(event) {
+        event.preventDefault(); 
+      });
+  
+      document.addEventListener('gestureend', function(event) {
+        event.preventDefault(); 
+      });
     </script>
 </body>
 </html>

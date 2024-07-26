@@ -1,15 +1,15 @@
-import SvbElement from "./SvbElement";
+import SvbElement from './SvbElement';
 
 class SvbDropdown extends SvbElement {
     /**
-     * 
-     * @param {Object} options 
+     *
+     * @param {Object} options
      * @param {Array<object>} options.list
      * @param {String} options.class
      * @param {String} options.position
-     * @returns 
+     * @returns
      */
-    constructor(options) {
+    constructor (options) {
         super();
 
         this.state = {
@@ -17,7 +17,7 @@ class SvbDropdown extends SvbElement {
             position:        options.position || 'bottom',
             classList:       options.class || '',
             activeItemIndex: -1,
-            activeItem:      null,
+            activeItem:      null
         };
 
         this.init();
@@ -25,7 +25,7 @@ class SvbDropdown extends SvbElement {
         return this.render();
     }
 
-    init() {
+    init () {
         this.component = SvbElement.create('div', null, `svb-dropdown ${this.state.classList}`);
         this.list = SvbElement.create('div', null, 'svb-dropdown__list');
 
@@ -39,7 +39,7 @@ class SvbDropdown extends SvbElement {
         this.defaultEvents();
     }
 
-    defaultEvents() {
+    defaultEvents () {
         this.event('click', this.list, (event) => {
             if (event.target.classList.contains('svb-dropdown__item')) {
                 this.eventClick(event);
@@ -57,7 +57,7 @@ class SvbDropdown extends SvbElement {
         });
     }
 
-    loadList(list = []) {
+    loadList (list = []) {
         this.state.list = list;
 
         this.eventLoad();
@@ -65,24 +65,24 @@ class SvbDropdown extends SvbElement {
         this.renderList();
     }
 
-    showDropdown() {
+    showDropdown () {
         this.component.classList.add('svb-dropdown--open');
     }
 
-    hideDropdown() {
+    hideDropdown () {
         this.component.classList.remove('svb-dropdown--open');
 
         this.clearActive();
     }
 
-    clearActive() {
+    clearActive () {
         if (this.state.activeItem) this.state.activeItem.classList.add('svb-dropdown__item--active');
 
         this.state.activeItemIndex = -1;
         this.state.activeItem = null;
     }
 
-    activateItem() {
+    activateItem () {
         if (this.state.activeItem) this.state.activeItem.classList.remove('svb-dropdown__item--active');
 
         this.state.activeItem = Array.from(this.list.childNodes)[this.state.activeItemIndex];
@@ -91,7 +91,7 @@ class SvbDropdown extends SvbElement {
         this.eventActive(this.state.activeItem);
     }
 
-    prevItem() {
+    prevItem () {
         if (this.state.activeItemIndex > 0) {
             this.state.activeItemIndex -= 1;
 
@@ -99,7 +99,7 @@ class SvbDropdown extends SvbElement {
         }
     }
 
-    nextItem() {
+    nextItem () {
         if (this.state.activeItemIndex < this.state.list.length - 1) {
             this.state.activeItemIndex += 1;
 
@@ -107,7 +107,7 @@ class SvbDropdown extends SvbElement {
         }
     }
 
-    renderList() {
+    renderList () {
         this.clearComponent(this.list);
 
         this.state.list.forEach((item) => {
@@ -117,14 +117,14 @@ class SvbDropdown extends SvbElement {
             listItem.additionalInfo = item.additionalInfo;
             listItem.addAttributes({
                 represent: item.r,
-                value:     item.v,
+                value:     item.v
             });
 
             this.list.appendChild(listItem);
         });
     }
 
-    render() {
+    render () {
         this.component.appendChild(this.list);
 
         return this.component;

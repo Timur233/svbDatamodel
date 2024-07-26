@@ -10,37 +10,36 @@ class BaseInput extends SvbElement {
         this.component = null;
 
         this.settings = {
-            readOnly: settings?.readOnly || false,
-            editOnly: settings?.editOnly || false,
+            readOnly:    settings?.readOnly || false,
+            editOnly:    settings?.editOnly || false,
             placeholder: settings?.placeholder || 'Введите значение',
-            style: {
-                classList,
+            style:       {
+                classList
             }
-        }
-        
+        };
+
         this.state = {
-            value: null,
+            value:     null,
             represent: null,
             controlls: [],
-            slots: [],
-        }
+            slots:     []
+        };
 
         this.baseInit();
         this.setSlots(settings?.slots || []);
 
-        if (value)
-            this.setValue(value);
+        if (value) { this.setValue(value); }
     }
 
-    get type () { return this._type }
+    get type () { return this._type; }
     set type (value) {}
 
-    baseInit() {
+    baseInit () {
         this.component = SvbElement.create('div', null, `svb-input ${this.settings.style.classList}`);
-        this.input     = SvbElement.create('input', null, null);
-        this.controll  = SvbElement.create('div', null, 'svb-input__controll');
-        this.slots     = SvbElement.create('div', null, 'svb-input__slots');
-        this.fragment  = null;
+        this.input = SvbElement.create('input', null, null);
+        this.controll = SvbElement.create('div', null, 'svb-input__controll');
+        this.slots = SvbElement.create('div', null, 'svb-input__slots');
+        this.fragment = null;
 
         /** vot tut mnogo voprosov */
         this.eventInput = () => {};
@@ -58,70 +57,126 @@ class BaseInput extends SvbElement {
         this.publicMethods();
     }
 
-    defaultEvents() {
+    defaultEvents () {
         this.event('input', this.input, (event) => {
-            const customEvent = new CustomEvent(`svb:input`, {
+            const customEvent = new CustomEvent('svb:input', {
                 bubbles:    true,
                 cancelable: true,
                 event
             });
-            
-            this.setValue(this.input.value);
-        
+
+            if (this.type !== 'number') {
+                this.setValue(this.input.value);
+            }
+
             return this.component.dispatchEvent(customEvent);
         });
 
         this.event('change', this.input, (event) => {
-            const customEvent = new CustomEvent(`svb:change`, {
+            const customEvent = new CustomEvent('svb:change', {
                 bubbles:    true,
                 cancelable: true,
                 event
             });
-            
+
             this.setValue(this.input.value);
-        
+            this.hideError();
+
+            return this.component.dispatchEvent(customEvent);
+        });
+
+        this.input.addEventListener('focus', (event) => {
+            const customEvent = new CustomEvent('svb:focus', {
+                bubbles:    true,
+                cancelable: true,
+                event
+            });
+
             return this.component.dispatchEvent(customEvent);
         });
 
         this.input.addEventListener('blur', (event) => {
-            const customEvent = new CustomEvent(`svb:blur`, {
+            const customEvent = new CustomEvent('svb:blur', {
                 bubbles:    true,
                 cancelable: true,
                 event
             });
-        
+
+            return this.component.dispatchEvent(customEvent);
+        });
+
+        this.input.addEventListener('blur', (event) => {
+            const customEvent = new CustomEvent('svb:blur', {
+                bubbles:    true,
+                cancelable: true,
+                event
+            });
+
             return this.component.dispatchEvent(customEvent);
         });
     }
 
-    publicMethods() {
+    publicMethods () {
         this.component.getInstance = this.getInstance.bind(this);
         this.component.setValue = this.setValue.bind(this);
         this.component.getValue = this.getValue.bind(this);
-        this.component.setSlot  = this.setSlot.bind(this);
+        this.component.setSlot = this.setSlot.bind(this);
+        this.component.emitError = this.emitError.bind(this);
+        this.component.hideError = this.hideError.bind(this);
+        this.component.disable = this.disable.bind(this);
+        this.component.enable = this.enable.bind(this);
     }
 
     setValue (value) {
-        this.state.value = String(value || '');
-        this.state.represent = this.state.value.split('\n').join('<br>');
+        if (this.type !== 'number') {
+            this.state.value = String(value || '');
+            this.state.represent = this.state.value.split('\n').join('<br>');
 
-        this.input.value = this.state.value;
+            this.input.value = this.state.value;
+        } else {
+            this.state.value = value;
+            this.state.represent = String(value || '');
+
+            this.input.value = this.state.value;
+        }
     }
 
     getValue () {
         return this.state.value;
     }
 
+    emitError () {
+        this.component.classList.add('svb-input--error');
+    }
+
+    hideError () {
+        this.component.classList.remove('svb-input--error');
+    }
+
+    disable () {
+        this.settings.disabled = true;
+
+        this.component.classList.add('svb-input--disabled');
+        this.input.setAttribute('disabled', 'disabled');
+    }
+
+    enable () {
+        this.settings.disabled = false;
+
+        this.component.classList.remove('svb-input--disabled');
+        this.input.removeAttribute('disabled');
+    }
+
     setSlots (slots = []) {
-        slots.forEach(slot => this.setSlot(slot))
+        slots.forEach(slot => this.setSlot(slot));
     }
 
     /**
-     * 
+     *
      * @param {Object} slot
      * @param {String} slot.title
      * @param {String} slot.position
-     * @param {Any} slot.content 
+     * @param {Any} slot.content
      */
     setSlot (slot) {
         if (slot.content) {
@@ -129,7 +184,7 @@ class BaseInput extends SvbElement {
                 id:       Math.floor(Math.random() * (234234234 + 1)).toString(),
                 title:    slot?.title || '',
                 position: slot?.position || 'end',
-                content:  slot.content,
+                content:  slot.content
             });
 
             this.renderSlots();
@@ -170,7 +225,7 @@ class BaseInput extends SvbElement {
         const slots = this.state.slots.filter(i => i.position === 'end');
 
         this.clearComponent(this.slots);
-        slots.forEach(slot => {
+        slots.forEach((slot) => {
             const slotElement = SvbElement.create('div', slot.id, 'svb-input__slot');
 
             if (slot.content instanceof HTMLElement) {
@@ -186,7 +241,7 @@ class BaseInput extends SvbElement {
         this.component.appendChild(this.slots);
     }
 
-    render() {
+    render () {
         this.clearComponent(this.component);
 
         this.renderWrapper();
@@ -195,7 +250,7 @@ class BaseInput extends SvbElement {
         this.renderSlots();
 
         if (this.fragment) {
-            this.component.appendChild(this.fragment)
+            this.component.appendChild(this.fragment);
         }
 
         return this.component;

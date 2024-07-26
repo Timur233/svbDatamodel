@@ -68,10 +68,8 @@ class FileUploader extends SvbElement {
 
         this.input.accept = this.state.formatsAccept;
         this.input.type = "file";
-        this.input.addEventListener('change', () => {
-            this.appendItems(this.input.files);
-    
-            this.loadFile();
+        this.input.addEventListener('change', () => {    
+            this.loadFile(this.input.files[0]);
         })
 
         this.eventChange = val => new Promise(resolve => resolve(val));
@@ -118,6 +116,7 @@ class FileUploader extends SvbElement {
 
     publicMethods() {
         this.component.setValue = this.setValue.bind(this);
+        this.component.getValue = this.getValue.bind(this);
         this.component.appendItems = this.appendItems.bind(this);
         this.component.appendItem = this.appendItem.bind(this);
         this.component.removeItem = this.removeItem.bind(this);
@@ -136,16 +135,22 @@ class FileUploader extends SvbElement {
             .catch();
     }
 
-    loadFile() {
+    loadFile(file) {
         this.eventChange()
             .then((res) => {})
             .catch();
 
             console.log(this)
 
-        this.loadMethod()
-            .then((res) => {})
+        this.loadMethod(file)
+            .then((res) => {
+                this.appendItems([{ file, svbFormat: res }]);
+            })
             .catch();
+    }
+
+    getValue() {
+        return this.state.files.map(i => i.svbFormat);
     }
 
     /**
@@ -157,6 +162,11 @@ class FileUploader extends SvbElement {
             this.state.files = files.map(file => ({
                 id:   Math.random() * 2345235345,
                 file: {
+                    name:  file.represent || file.name || '',
+                    url:   file.url,
+                    value: file.value || file.url,
+                },
+                svbFormat: {
                     name:  file.represent || file.name || '',
                     url:   file.url,
                     value: file.value || file.url,
@@ -190,7 +200,8 @@ class FileUploader extends SvbElement {
 
         this.state.files.push({
             id:   Math.random() * 2345235345,
-            file: item,
+            file: item.file,
+            svbFormat: item.svbFormat,
         });
 
         this.renderList();
@@ -202,6 +213,8 @@ class FileUploader extends SvbElement {
      */
     removeItem(id) {
         const item = this.state.files.find(file => file.id === id);
+
+        console.log(id, item);
 
         this.removeMethod(item);
     }
@@ -320,7 +333,7 @@ class FileUploader extends SvbElement {
                     e.stopPropagation();
                     e.preventDefault();
 
-                    this.removeItem(item.id);
+                    this.deleteFile(item.id);
                 });
 
                 imageBlock.addEventListener('click', (e) => {
@@ -610,19 +623,23 @@ class FileUploader extends SvbElement {
     static imagePreview(file, img) {
         const reader = new FileReader();
 
-        if (file.image) {
-            img.src = file.image;
-
-            return file.image;
+        try {
+            if (file.image) {
+                img.src = file.image;
+    
+                return file.image;
+            }
+    
+            reader.onload = (e) => {
+                file.image = e.target.result;
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+    
+            return img.src;
+        } catch (error) {
+            
         }
-
-        reader.onload = (e) => {
-            file.image = e.target.result;
-            img.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-
-        return img.src;
     }
 }
 

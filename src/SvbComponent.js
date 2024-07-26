@@ -8,10 +8,6 @@ import FileUploader from './components/FileUploader';
 import PageAlert from './components/PageAlert';
 
 class SvbComponent {
-    constructor () {
-        
-    }
-
     static customComponent (tag, descriptor, id) {
         const component = SvbElement.create(tag, null, 'svbCustom__component');
 
@@ -35,33 +31,33 @@ class SvbComponent {
         return new SvbInput(settings);
     }
 
-    static attributesForm(attributes) {
+    static attributesForm (attributes) {
         return new SvbAttributesForm(attributes);
     }
 
-    static fileUploader(title) {
+    static fileUploader (title) {
         return new FileUploader(title);
     }
 
-    static pagePreloader(title, desc, buttons = []) {
+    static pagePreloader (title, desc, buttons = []) {
         const pageAlert = new PageAlert();
-        
+
         pageAlert.showLoader(title, desc, buttons);
 
         return pageAlert.component;
     }
 
-    static pageSuccess(title, desc, buttons = [], icon = null) {
+    static pageSuccess (title, desc, buttons = [], icon = null) {
         const pageAlert = new PageAlert();
-        
+
         pageAlert.showMessage(icon, title, desc, buttons);
 
         return pageAlert.component;
     }
 
-    static pageError(title, desc, buttons = [], icon = null) {
+    static pageError (title, desc, buttons = [], icon = null) {
         const pageAlert = new PageAlert();
-        
+
         pageAlert.showError(icon, title, desc, buttons);
 
         return pageAlert.component;
