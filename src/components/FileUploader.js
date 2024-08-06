@@ -1,7 +1,7 @@
-import SvbElement from "./SvbElement";
+import SvbElement from './SvbElement';
 
 class FileUploader extends SvbElement {
-    constructor(title, options, viewSetting) {
+    constructor (title, options, viewSetting) {
         super();
 
         this.state = {
@@ -15,8 +15,8 @@ class FileUploader extends SvbElement {
                 application/vnd.openxmlformats-officedocument.wordprocessingml.document, 
                 application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, 
                 application/vnd.ms-powerpoint, application/vnd.openxmlformats-officedocument.presentationml.presentation`,
-            settings:       {
-                readOnly: false,
+            settings: {
+                readOnly: false
             }
         };
 
@@ -27,7 +27,7 @@ class FileUploader extends SvbElement {
         return this.render();
     }
 
-    init() {
+    init () {
         this.component = SvbElement.create('div', null, 'svbUploader', null);
         this.input = SvbElement.create('input', null, 'svbUploader__input', null);
         this.fileList = SvbElement.create('div', null, 'svbUploader__list uploaderList', null);
@@ -67,10 +67,10 @@ class FileUploader extends SvbElement {
         this.fileListLabel.appendChild(this.photoButton);
 
         this.input.accept = this.state.formatsAccept;
-        this.input.type = "file";
-        this.input.addEventListener('change', () => {    
+        this.input.type = 'file';
+        this.input.addEventListener('change', () => {
             this.loadFile(this.input.files[0]);
-        })
+        });
 
         this.eventChange = val => new Promise(resolve => resolve(val));
         this.loadMethod = val => new Promise(resolve => resolve(val));
@@ -83,14 +83,13 @@ class FileUploader extends SvbElement {
         this.publicMethods();
     }
 
-    defaultEvents() {
+    defaultEvents () {
         this.event('click', this.uploadButton, () => {
             if (this.component.classList.contains('svbUploader--hide-controll')) return;
 
-            if (this.state.settings.readOnly === false)
-                this.input.click();
+            if (this.state.settings.readOnly === false) { this.input.click(); }
         });
-        
+
         this.event('click', this.photoButton, () => {
             if (this.component.classList.contains('svbUploader--hide-controll')) return;
 
@@ -102,19 +101,19 @@ class FileUploader extends SvbElement {
         });
 
         this.event('change', this.input, () => {
-            const customEvent = new CustomEvent(`svb:change`, {
+            const customEvent = new CustomEvent('svb:change', {
                 bubbles:    true,
                 cancelable: true,
                 event
             });
-            
+
             this.setValue(this.input.value);
-        
+
             return this.component.dispatchEvent(customEvent);
         });
     }
 
-    publicMethods() {
+    publicMethods () {
         this.component.setValue = this.setValue.bind(this);
         this.component.getValue = this.getValue.bind(this);
         this.component.appendItems = this.appendItems.bind(this);
@@ -127,7 +126,7 @@ class FileUploader extends SvbElement {
         this.component.showControll = this.toggleControllButtons.bind(this, true);
     }
 
-    download(id) {
+    download (id) {
         this.downloadMethod(id)
             .then((res) => {
                 console.log(res);
@@ -135,12 +134,12 @@ class FileUploader extends SvbElement {
             .catch();
     }
 
-    loadFile(file) {
+    loadFile (file) {
         this.eventChange()
             .then((res) => {})
             .catch();
 
-            console.log(this)
+        console.log(this);
 
         this.loadMethod(file)
             .then((res) => {
@@ -149,7 +148,7 @@ class FileUploader extends SvbElement {
             .catch();
     }
 
-    getValue() {
+    getValue () {
         return this.state.files.map(i => i.svbFormat);
     }
 
@@ -157,33 +156,33 @@ class FileUploader extends SvbElement {
      *
      * @param {{value: String, represent: String, url: String}[]} files
      */
-    setValue(files) {
+    setValue (files) {
         if (Array.isArray(files) && files) {
             this.state.files = files.map(file => ({
                 id:   Math.random() * 2345235345,
                 file: {
                     name:  file.represent || file.name || '',
                     url:   file.url,
-                    value: file.value || file.url,
+                    value: file.value || file.url
                 },
                 svbFormat: {
                     name:  file.represent || file.name || '',
                     url:   file.url,
-                    value: file.value || file.url,
-                },
+                    value: file.value || file.url
+                }
             }));
 
             this.renderList();
         }
     }
 
-    appendItems(items) {
+    appendItems (items) {
         if (items?.length === 0) return;
 
         Array.from(items).forEach(item => this.appendItem(item));
     }
 
-    appendItem(item) {
+    appendItem (item) {
         if (!item) return;
 
         if ((this.state.files.length + 1) === this.state.maxFilesLenght) {
@@ -199,9 +198,9 @@ class FileUploader extends SvbElement {
         }
 
         this.state.files.push({
-            id:   Math.random() * 2345235345,
-            file: item.file,
-            svbFormat: item.svbFormat,
+            id:        Math.random() * 2345235345,
+            file:      item.file,
+            svbFormat: item.svbFormat
         });
 
         this.renderList();
@@ -211,7 +210,7 @@ class FileUploader extends SvbElement {
      *
      * @param {`Number`} id
      */
-    removeItem(id) {
+    removeItem (id) {
         const item = this.state.files.find(file => file.id === id);
 
         console.log(id, item);
@@ -223,14 +222,14 @@ class FileUploader extends SvbElement {
      *
      * @param {`Number`} id
      */
-    deleteFile(id) {
+    deleteFile (id) {
         if (!id) return;
 
         this.state.files = this.state.files.filter(item => item.id !== id);
         this.renderList();
     }
 
-    toggleControllButtons(isShow) {
+    toggleControllButtons (isShow) {
         if (!isShow) {
             this.component.classList.add('svbUploader--hide-controll');
 
@@ -240,15 +239,15 @@ class FileUploader extends SvbElement {
         this.component.classList.remove('svbUploader--hide-controll');
     }
 
-    enable() {
+    enable () {
         this.readOnlyToggle(false);
     }
 
-    disable() {
+    disable () {
         this.readOnlyToggle(true);
     }
 
-    readOnlyToggle(readOnly) {
+    readOnlyToggle (readOnly) {
         this.state.settings.readOnly = readOnly;
 
         this.component.classList.toggle('svbUploader--hide-controll');
@@ -260,7 +259,7 @@ class FileUploader extends SvbElement {
      *
      * @param {String} message
      */
-    showError(message) {
+    showError (message) {
         this.errorMessage.textContent = message;
         this.fileList.classList.add('uploaderList--error');
         this.component.appendChild(this.errorMessage);
@@ -272,11 +271,11 @@ class FileUploader extends SvbElement {
         }, 4000);
     }
 
-    renderInput() {
+    renderInput () {
         this.input.addStyles({ display: 'none' });
     }
 
-    renderList() {
+    renderList () {
         this.clearComponent(this.fileListGrid);
 
         if (this.state.files.length > 0) {
@@ -301,7 +300,7 @@ class FileUploader extends SvbElement {
                             <path d="M9.5 16.5V10.5" stroke="rgba(255, 68, 67, 1)" stroke-width="1.5" stroke-linecap="round"/>
                             <path d="M14.5 16.5V10.5" stroke="rgba(255, 68, 67, 1)" stroke-width="1.5" stroke-linecap="round"/>
                         </svg>
-                    `,
+                    `
                 );
                 const zoomBtn = SvbElement.create(
                     'button',
@@ -314,7 +313,7 @@ class FileUploader extends SvbElement {
                             20C15.9706 20 20 15.9706 20 11Z" stroke="black" stroke-width="1.5" stroke-linejoin="round"/>
                             <path d="M7.5 11H14.5M11 7.5V14.5" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>                    
-                    `,
+                    `
                 );
 
                 fileName.textContent = item.file.name;
@@ -344,10 +343,12 @@ class FileUploader extends SvbElement {
                 });
 
                 fileItem.appendChild(imageBlock);
+
                 // fileItem.appendChild(fileName);
                 if (item?.file?.type === 'image/svg+xml' || item?.file?.type === 'image/jpeg' || item?.file?.type === 'image/png') {
                     fileItem.appendChild(zoomBtn);
                 }
+
                 fileItem.appendChild(removeBtn);
 
                 this.fileListGrid.append(fileItem);
@@ -363,7 +364,7 @@ class FileUploader extends SvbElement {
         this.fileList.appendChild(this.fileListGrid);
     }
 
-    render() {
+    render () {
         this.renderInput();
         this.renderList();
 
@@ -373,7 +374,7 @@ class FileUploader extends SvbElement {
         return this.component;
     }
 
-    static getPreview(file, className) {
+    static getPreview (file, className) {
         const ext = (name) => {
             const m = name?.match(/\.([^.]+)$/);
 
@@ -481,13 +482,15 @@ class FileUploader extends SvbElement {
             case 'jif':
                 icon = SvbElement.create('svg', null, 'svg-icon', `
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M21 11V10C21 6.22876 21 4.34315 19.7595 3.17157C18.519 2 16.5225 2 12.5294 2H11.4706C7.47752 
-                        2 5.48098 2 4.24049 3.17157C3 4.34315 3 6.22876 3 10V14C3 17.7712 3 19.6569 4.24049 20.8284C5.48098 
+                        <path d="M21 11V10C21 6.22876 21 4.34315 19.7595 3.17157C18.519 2 16.5225 
+                        2 12.5294 2H11.4706C7.47752 2 5.48098 2 4.24049 3.17157C3 4.34315 3 6.22876 
+                        3 10V14C3 17.7712 3 19.6569 4.24049 20.8284C5.48098 
                         22 7.47751 22 11.4706 22H12" stroke="black" stroke-width="1.5" stroke-linecap="round"/>
                         <path d="M8 7H16" stroke="black" stroke-width="1.5" stroke-linecap="round"/>
                         <path d="M8 12H13" stroke="black" stroke-width="1.5" stroke-linecap="round"/>
                         <path d="M21 20.6471V17C21 15.5706 19.6569 14 18 14C16.3431 14 15 15.5706 15 17V20.5C15 21.2797 
-                        15.7326 22 16.6364 22C17.5401 22 18.2727 21.2797 18.2727 20.5V17.7647" stroke="black" stroke-width="1.5" 
+                        15.7326 22 16.6364 22C17.5401 22 18.2727 21.2797 18.2727 20.5V17.7647" 
+                        stroke="black" stroke-width="1.5" 
                         stroke-linecap="round"/>
                     </svg>                                            
                 `);
@@ -504,14 +507,15 @@ class FileUploader extends SvbElement {
             case 'jsx':
                 icon = SvbElement.create('svg', null, 'svg-icon', `
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M21 11V10C21 6.22876 21 4.34315 19.7595 3.17157C18.519 2 16.5225 2 12.5294 2H11.4706C7.47752 
-                        2 5.48098 2 4.24049 3.17157C3 4.34315 3 6.22876 3 10V14C3 17.7712 3 19.6569 4.24049 20.8284C5.48098 
-                        22 7.47751 22 11.4706 22H12" stroke="black" stroke-width="1.5" stroke-linecap="round"/>
+                        <path d="M21 11V10C21 6.22876 21 4.34315 19.7595 3.17157C18.519 2 16.5225 2 12.5294 
+                        2H11.4706C7.47752 2 5.48098 2 4.24049 3.17157C3 4.34315 3 6.22876 3 10V14C3 17.7712 
+                        3 19.6569 4.24049 20.8284C5.48098 22 7.47751 22 11.4706 22H12" stroke="black" 
+                        stroke-width="1.5" stroke-linecap="round"/>
                         <path d="M8 7H16" stroke="black" stroke-width="1.5" stroke-linecap="round"/>
                         <path d="M8 12H13" stroke="black" stroke-width="1.5" stroke-linecap="round"/>
                         <path d="M21 20.6471V17C21 15.5706 19.6569 14 18 14C16.3431 14 15 15.5706 15 17V20.5C15 21.2797 
-                        15.7326 22 16.6364 22C17.5401 22 18.2727 21.2797 18.2727 20.5V17.7647" stroke="black" stroke-width="1.5" 
-                        stroke-linecap="round"/>
+                        15.7326 22 16.6364 22C17.5401 22 18.2727 21.2797 18.2727 20.5V17.7647" stroke="black" 
+                        stroke-width="1.5" stroke-linecap="round"/>
                     </svg>                                            
                 `);
                 imageBlock.classList.add('uploaderList__image--code');
@@ -620,27 +624,27 @@ class FileUploader extends SvbElement {
         return imageBlock;
     }
 
-    static imagePreview(file, img) {
+    static imagePreview (file, img) {
         const reader = new FileReader();
 
         try {
             if (file.image) {
                 img.src = file.image;
-    
+
                 return file.image;
             }
-    
+
             reader.onload = (e) => {
                 file.image = e.target.result;
                 img.src = e.target.result;
             };
             reader.readAsDataURL(file);
-    
+
             return img.src;
         } catch (error) {
-            
+
         }
     }
 }
 
-export default FileUploader
+export default FileUploader;

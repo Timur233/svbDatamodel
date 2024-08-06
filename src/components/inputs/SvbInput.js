@@ -1,15 +1,16 @@
-import SvbInputCatalog from "./SvbInputCatalog";
-import BaseInput from "./BaseInput";
+import BaseInput from './BaseInput';
+import SvbInputCatalog from './SvbInputCatalog';
+import SvbInputDate from './SvbInputDate';
 
 class SvbInput {
-    constructor(settings, classList) {
+    constructor (settings, classList) {
         this.settings = settings;
         this.classList = classList;
 
         return this.init();
     }
 
-    init() {
+    init () {
         const inputType = SvbInput.getInputType(this.settings?.type, this.settings?.multiline);
 
         switch (inputType) {
@@ -18,12 +19,14 @@ class SvbInput {
             case 'document':
             case 'doctable':
                 return new SvbInputCatalog(this.settings, this.classList);
+            case 'datetime-local':
+                return new SvbInputDate(this.settings, this.classList);
             default:
                 return new BaseInput(this.settings, this.classList);
         }
     }
 
-    static getInputType(type = 'text', isMultyply = false) {
+    static getInputType (type = 'text', isMultyply = false) {
         if (type === 'text' && isMultyply) {
             return 'textarea';
         }

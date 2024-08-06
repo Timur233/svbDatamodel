@@ -19,6 +19,7 @@ async function renderForm (DM, contentBlock, saveCallback) {
             `;
         }
     });
+    const fileUploader = DM.vm.fileUploader('Фото зеленки');
     const svbForm = DM.vm.form({
         attributes: [
             {
@@ -68,77 +69,6 @@ async function renderForm (DM, contentBlock, saveCallback) {
                 }
             },
             {
-                label:      'Этаж',
-                descriptor: 'floor',
-                settings:   {
-                    required:    true,
-                    type:        'number',
-                    placeholder: 'Укажите этаж'
-                }
-            },
-            {
-                label:      'Марка бетона',
-                descriptor: 'concrete',
-                settings:   {
-                    required:       true,
-                    type:           'catalog',
-                    typeObjectName: 'nomenclature',
-                    placeholder:    'Начните вводить',
-                    filters:        {
-                        static: [
-                            {
-                                preoperator:  'AND',
-                                attribute:    'type',
-                                predicate:    '=',
-                                value:        '257e1933-de73-49fd-acc2-a73322fef8e5',
-                                postoperator: '',
-                                represent:    true
-                            }
-                        ]
-                    }
-                }
-            },
-            {
-                label:      'Конструктив',
-                descriptor: 'constructives',
-                settings:   {
-                    required:       true,
-                    type:           'catalog',
-                    typeObjectName: 'constructives',
-                    placeholder:    'Начните вводить',
-                    filters:        {
-                        static: [
-                            {
-                                preoperator:  'AND',
-                                attribute:    'forconcrete',
-                                filteralias:  'Это блок?',
-                                predicate:    '=',
-                                value:        true,
-                                postoperator: '',
-                                represent:    true
-                            }
-                        ]
-                    }
-                }
-            },
-            {
-                label:      'Объем',
-                descriptor: 'quantity',
-                settings:   {
-                    required:    true,
-                    type:        'number',
-                    placeholder: 'Объем',
-                    slots:       [{
-                        content: 'М<sup>3</sup>'
-                    }],
-                    validate: (value) => {
-                        if (value && Number(value) > 0) return true;
-
-                        return false;
-                    }
-                }
-            },
-            {
                 label:      'Автобетононасос',
                 descriptor: 'concretepump',
                 settings:   {
@@ -149,8 +79,40 @@ async function renderForm (DM, contentBlock, saveCallback) {
                 }
             },
             {
-                label:      'Дата и время доставки',
-                descriptor: 'docdate',
+                label:      'Гос. номер автобетононасоса',
+                descriptor: 'autonumber',
+                settings:   {
+                    required:    true,
+                    type:        'text',
+                    placeholder: 'Гос. номер'
+                }
+            },
+            {
+                label:      'Поставщик',
+                descriptor: 'supplier',
+                settings:   {
+                    required:       true,
+                    type:           'catalog',
+                    typeObjectName: 'organizations',
+                    placeholder:    'Начните вводить',
+                    filters:        {
+                        static: [
+                            {
+                                preoperator:  'AND',
+                                attribute:    'type',
+                                filteralias:  'Это блок?',
+                                predicate:    '=',
+                                value:        '048cffb9-d412-4641-8c54-8095a8a185d9',
+                                postoperator: '',
+                                represent:    true
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                label:      'Начало работы автобетононасоса',
+                descriptor: 'startdate',
                 settings:   {
                     required:    true,
                     type:        'datetime-local',
@@ -158,14 +120,12 @@ async function renderForm (DM, contentBlock, saveCallback) {
                 }
             },
             {
-                label:      'Комментарий',
-                descriptor: 'comment',
+                label:      'Завершение работы автобетононасоса',
+                descriptor: 'finihdate',
                 settings:   {
                     required:    true,
-                    multiline:   true,
-                    type:        'text',
-                    height:      130,
-                    placeholder: ''
+                    type:        'datetime-local',
+                    placeholder: SvbFormatter.timestamp(new Date())
                 }
             }
         ]
@@ -191,7 +151,6 @@ async function renderForm (DM, contentBlock, saveCallback) {
     });
     const buttonsGroup = SvbElement.create('div', null, 'app-form__buttons-group buttons-group buttons-group--column');
     const saveButton = SvbElement.create('button', null, 'btn btn--primary', 'Сохранить');
-    const clearButton = SvbElement.create('button', null, 'btn btn--cancel btn--color-red', 'Сброс');
 
     saveButton.addEventListener('click', async () => {
         if (svbForm.validate()) {
@@ -204,19 +163,21 @@ async function renderForm (DM, contentBlock, saveCallback) {
         }
     });
 
-    clearButton.addEventListener('click', () => {
-        DM.model.mainproject = null;
-        DM.model.project = null;
-        DM.model.floor = null;
-        DM.model.constructives = null;
-        DM.model.quantity = null;
-        DM.model.concrete = null;
-        DM.model.concretepump = null;
-        DM.model.docdate = null;
+    buttonsGroup.appendChild(saveButton);
+
+    svbForm.getInstance().state.attributes.forEach((attr) => {
+        const inputInstance = attr.input.getInstance();
+
+        inputInstance.searchHandling = catalogHelper;
     });
 
-    buttonsGroup.appendChild(saveButton);
-    // buttonsGroup.appendChild(clearButton);
+    fileUploader.getInstance()
+        .loadMethod = filesActions().upload.bind(fileUploader.getInstance());
+
+    fileUploader.getInstance()
+        .removeMethod = filesActions().remove.bind(fileUploader.getInstance());
+
+    window.fileUploader = fileUploader;
 
     DM.watch('mainproject', (value) => {
         const storage = svbForm.getAttribute('mainproject').getInstance()
@@ -253,19 +214,8 @@ async function renderForm (DM, contentBlock, saveCallback) {
         }
     });
 
-    DM.watch('supplier', (value) => {
-        if (value.v) {
-            svbForm.disable();
-        }
-    });
-
-    svbForm.getInstance().state.attributes.forEach((attr) => {
-        const inputInstance = attr.input.getInstance();
-
-        inputInstance.searchHandling = catalogHelper;
-    });
-
     contentBlock.appendChild(title);
+    contentBlock.appendChild(fileUploader);
     contentBlock.appendChild(svbForm);
     contentBlock.appendChild(summary);
     contentBlock.appendChild(buttonsGroup);
@@ -277,19 +227,18 @@ async function initPage () {
     const contentBlock = document.querySelector('#content-block');
     const userData     = await checkSession(session);
     const DM           = new SvbModel({
-        pageTitle:     'Заявка на бетон',
-        ourfirm:       null,
-        mainproject:   null,
-        project:       null,
-        floor:         null,
-        constructives: null,
-        quantity:      null,
-        concretepump:  null,
-        docdate:       null,
-        createDate:    new Date(),
-        supplier:      null,
-        comment:       null,
-        author:        { r: userData.represent, v: userData.uuid }
+        pageTitle:    'Фиксация работы автобетононасоса',
+        ourfirm:      null,
+        mainproject:  null,
+        concretepump: null,
+        autonumber:   null,
+        supplier:     null,
+
+        startdate: null,
+        finihdate: null,
+
+        createDate: new Date(),
+        author:     { r: userData.represent, v: userData.uuid }
     }, 'doc', 'concreterequisitions');
 
     window.session = session;
@@ -298,22 +247,17 @@ async function initPage () {
     if (docUuid === 'new') {
         await renderForm(DM, contentBlock, async () => {
             return await insertAction({
-                floor:        DM.model.floor,
-                docdate:      SvbFormatter.sqlDate(DM.model.createDate),
                 ourfirm:      DM.model.ourfirm.v,
-                project:      DM.model.project.v,
-                storage:      DM.model.storage.v,
-                concrete:     DM.model.concrete.v,
-                inserter:     null,
-                quantity:     DM.model.quantity,
-                docnumber:    null,
                 mainproject:  DM.model.mainproject.v,
+                project:      DM.model.project.v,
                 concretepump: DM.model.concretepump.v,
-                constructive: DM.model.constructives.v,
-                comment:      DM.model.comment,
-                purchasedate: SvbFormatter.sqlTimestamp(DM.model.docdate),
-                writeoffitem: '132538d4-96dc-4b91-b3f7-d61b58d0226e',
-                draft:        false
+                autonumber:   DM.model.autonumber,
+                supplier:     DM.model.supplier.v,
+                startdate:    SvbFormatter.sqlDate(DM.model.startdate),
+                finihdate:    SvbFormatter.sqlDate(DM.model.startdate),
+                scan:         window.fileUploader.getValue(),
+
+                draft: false
             })
                 .then((res) => {
                     SvbComponent.pageSuccess('Сохранено', 'Прием бетона сохранен');
@@ -332,21 +276,19 @@ async function initPage () {
         window.preloader.remove();
     } else {
         const request = await getInstance(docUuid);
-        const instanceData = request.result.document.concreterequisitions.instance.attr;
+        const instanceData = request.result.document.concretepumpjobs.instance.attr;
 
         await renderForm(DM, contentBlock, async () => {
             return await updateAction(DM.model.uuid, {
-                floor:        DM.model.floor,
                 ourfirm:      DM.model.ourfirm.v,
-                project:      DM.model.project.v,
-                storage:      DM.model.storage.v,
-                concrete:     DM.model.concrete.v,
-                quantity:     DM.model.quantity,
                 mainproject:  DM.model.mainproject.v,
+                project:      DM.model.project.v,
                 concretepump: DM.model.concretepump.v,
-                constructive: DM.model.constructives.v,
-                comment:      DM.model.comment,
-                purchasedate: SvbFormatter.sqlTimestamp(DM.model.docdate)
+                autonumber:   DM.model.autonumber,
+                supplier:     DM.model.supplier.v,
+                startdate:    SvbFormatter.sqlDate(DM.model.startdate),
+                finihdate:    SvbFormatter.sqlDate(DM.model.startdate),
+                scan:         window.fileUploader.getValue()
             })
                 .then((res) => {
                     SvbComponent.pageSuccess('Сохранено', 'Прием бетона сохранен');
@@ -362,24 +304,24 @@ async function initPage () {
                 });
         });
 
-        DM.model.pageTitle = `Заявка на бетон №${instanceData.docnumber} от ${
+        DM.model.pageTitle = `Фиксация работы автобетононасоса №${instanceData.docnumber} от ${
             SvbFormatter.date(instanceData.insertdate)}`;
         DM.model.uuid = instanceData.uuid;
         DM.model.ourfirm = instanceData.ourfirm;
         DM.model.storage = instanceData.storage;
         DM.model.mainproject = instanceData.mainproject;
         DM.model.project = instanceData.project;
-        DM.model.floor = instanceData.floor;
-        DM.model.constructives = instanceData.constructive;
-        DM.model.quantity = instanceData.quantity;
+        DM.model.scan = instanceData.scan;
         DM.model.concretepump = instanceData.concretepump;
-        DM.model.concrete = instanceData.concrete;
+        DM.model.autonumber = instanceData.autonumber;
         DM.model.supplier = instanceData.supplier;
-        DM.model.comment = instanceData.comment;
-        DM.model.docdate = new Date(instanceData.purchasedate || null)?.toISOString()?.slice(0, 16);
-        DM.model.createDate = new Date(instanceData.insertdate || null)?.toISOString()?.slice(0, 16);
+
+        DM.model.startdate = new Date(instanceData.startdate || null)?.toISOString()?.slice(0, 16);
+        DM.model.finihdate = new Date(instanceData.infinihdatesertdate || null)?.toISOString()?.slice(0, 16);
+        DM.model.createDate = new Date(instanceData.insertdate).toISOString().slice(0, 16);
         DM.model.author = instanceData.inserter;
 
+        window.fileUploader.setValue(instanceData.scan);
         window.preloader.remove();
     }
 }
@@ -490,6 +432,43 @@ async function getStorageData (uuid) {
         .catch(e => e);
 }
 
+function filesActions () {
+    return {
+        upload: async function (file) {
+            const formData = new FormData();
+
+            formData.append('file', file);
+
+            return fetch('https://cab.qazaqstroy.kz/files/upload', {
+                method: 'POST',
+                body:   formData
+            })
+                .then(res => res.json())
+                .then(res => ({
+                    name:  res.name,
+                    url:   res.url,
+                    value: res.url
+                }));
+        },
+        preview: async function (uuid) {
+            const response = await fetch('https://cab.qazaqstroy.kz/files/download', {
+                method: 'POST',
+                body:   JSON.stringify({ url: uuid })
+            });
+            const blob = await response.blob();
+            const reader = new FileReader();
+            const base64data = await new Promise((resolve, reject) => {
+                reader.onloadend = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+
+            return base64data;
+        },
+        remove: async () => {}
+    };
+}
+
 async function insertAction (data) {
     return await fetch('https://cab.qazaqstroy.kz/svbapi', {
         method:  'POST',
@@ -501,7 +480,7 @@ async function insertAction (data) {
             reqoptions: {
                 datatype: 'instance',
                 instance: '',
-                name:     'concreterequisitions',
+                name:     'concretepumpjobs',
                 data:     {
                     instance: data,
                     tables:   {}
@@ -533,7 +512,7 @@ async function updateAction (uuid, data) {
             reqoptions: {
                 datatype: 'instance',
                 instance: uuid,
-                name:     'concreterequisitions',
+                name:     'concretepumpjobs',
                 data:     {
                     instance: data,
                     tables:   {}
@@ -563,7 +542,7 @@ async function getInstance (uuid) {
             type:       'document',
             action:     'select',
             reqoptions: {
-                name:     'concreterequisitions',
+                name:     'concretepumpjobs',
                 datatype: 'instance',
                 instance: uuid,
                 lang:     'ru',

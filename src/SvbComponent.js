@@ -6,6 +6,7 @@ import SvbInput from './components/inputs/SvbInput';
 import SvbAttributesForm from './components/SvbAttributesForm';
 import FileUploader from './components/FileUploader';
 import PageAlert from './components/PageAlert';
+import SvbFormatter from './utils/SvbFormatter';
 
 class SvbComponent {
     static customComponent (tag, descriptor, id) {

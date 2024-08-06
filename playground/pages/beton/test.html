@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iOS Style Picker</title>
+    <style>
+        body {
+            background-color: #e6e6e6;
+        }
+
+        .picker {
+            display: flex;
+            justify-content: center; 
+            gap: 38px;
+            width: 167px;
+            height: 120px;
+            overflow: hidden;
+            background-color: #fff;
+            box-shadow: 0px 0px 10px 0px rgba(102, 102, 102, 0.25);
+            border-radius: 12px;
+            position: relative;
+            font-family: Arial, sans-serif;
+        }
+
+        .picker-wrapper {
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s ease;
+            perspective: 1000px;
+        }
+
+        .picker-item {
+            font-size: 40px;
+            height: 40px;
+            line-height: 1.38;
+            font-size: 23px;
+            text-align: center;
+            transform: perspective(500px) rotateX(20deg) scale(.86);
+            transition: transform .12s;
+            color: rgba(156, 163, 175, 1);
+        }
+
+        .picker-item--active {
+            transform: rotateX(0deg);
+            color: rgba(107, 122, 128, 1);
+        }
+
+        .picker-item--active + .picker-item {
+            transform: perspective(500px) rotateX(-20deg) scale(.86);
+        }
+
+        .highlight {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 40px;
+            margin-top: -25px;
+            /* border-top: 1px solid #ccc; */
+            /* border-bottom: 1px solid #ccc; */
+            background: rgba(243, 244, 246, 1);
+            border-radius: 4px;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="picker">
+        <div class="highlight"></div>
+        <div class="picker-wrapper" id="picker-wrapper">
+            <div class="picker-item"></div>
+            <div class="picker-item picker-item--active">1</div>
+            <div class="picker-item">2</div>
+            <div class="picker-item">3</div>
+            <div class="picker-item">4</div>
+            <div class="picker-item">5</div>
+            <div class="picker-item">6</div>
+            <div class="picker-item">7</div>
+            <div class="picker-item">8</div>
+            <div class="picker-item">9</div>
+            <div class="picker-item">10</div>
+            <div class="picker-item"></div>
+        </div>
+        <div class="picker-wrapper" id="picker-wrapper">
+            <div class="picker-item"></div>
+            <div class="picker-item picker-item--active">1</div>
+            <div class="picker-item">2</div>
+            <div class="picker-item">3</div>
+            <div class="picker-item">4</div>
+            <div class="picker-item">5</div>
+            <div class="picker-item">6</div>
+            <div class="picker-item">7</div>
+            <div class="picker-item">8</div>
+            <div class="picker-item">9</div>
+            <div class="picker-item">10</div>
+            <div class="picker-item"></div>
+        </div>
+    </div>
+
+    <script>
+        document.querySelectorAll('.picker-wrapper').forEach(pickerWrapper => {
+            const itemHeight = 40;
+            const itemCount = pickerWrapper.children.length;
+            let startY;
+            let initialTranslateY = 0;
+            let currentTranslateY = 0;
+            let selectedIndex = 0;
+
+            pickerWrapper.addEventListener('touchstart', (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+
+                startY = e.touches[0].clientY;
+                initialTranslateY = currentTranslateY;
+                pickerWrapper.style.transition = 'none';
+            });
+
+            pickerWrapper.addEventListener('touchmove', (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+
+                const touchY = e.touches[0].clientY;
+                const diff = touchY - startY;
+                currentTranslateY = initialTranslateY + diff;
+                pickerWrapper.style.transform = `translateY(${currentTranslateY}px)`;
+
+                const itemOffset = Math.round(currentTranslateY / itemHeight);
+                const clampedOffset = Math.max(Math.min(itemOffset, 0), -itemCount + 3);
+                selectedIndex = -clampedOffset;
+                
+                const selected = pickerWrapper.children[selectedIndex + 1]
+                
+                pickerWrapper.querySelector('.picker-item--active').classList.remove('picker-item--active')
+                selected.classList.add('picker-item--active');
+            });
+
+            pickerWrapper.addEventListener('touchend', (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+
+                const itemOffset = Math.round(currentTranslateY / itemHeight);
+                const clampedOffset = Math.max(Math.min(itemOffset, 0), -itemCount + 3); // ограничение прокрутки
+                currentTranslateY = clampedOffset * itemHeight;
+                pickerWrapper.style.transition = 'transform 0.3s ease';
+                pickerWrapper.style.transform = `translateY(${currentTranslateY}px)`;
+                selectedIndex = -clampedOffset + 1;
+                console.log(`Selected index: ${selectedIndex}`);
+            });
+        })
+    </script>
+</body>
+</html>

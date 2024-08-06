@@ -9,8 +9,6 @@ class SvbAttributesForm extends SvbElement {
         };
 
         this.init();
-
-        console.log(this);
     }
 
     init () {
@@ -38,18 +36,19 @@ class SvbAttributesForm extends SvbElement {
         this.state.attributes.forEach((attr) => {
             const attrSettings = attr.settings;
             const attrValue = attr.input.getValue();
+            const inputValidate = attr.input.validate();
 
             if (attrSettings.required) {
                 let valueInBool = true;
 
                 switch (attrSettings.type) {
                     case 'catalog':
-                        valueInBool = !!attrValue?.v;
+                        valueInBool = !!attrValue?.v && inputValidate;
 
                         break;
 
                     default:
-                        valueInBool = !!attrValue;
+                        valueInBool = !!attrValue && inputValidate;
 
                         break;
                 }

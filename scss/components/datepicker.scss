@@ -1,0 +1,288 @@
+$datepicker__current: rgba(11, 165, 255, 1);
+$datepicker__border: #d7d7d7;
+$datepicker__shadow: rgba(0, 0, 0, .15);
+$datepicker-pres-year__color: rgba(31, 41, 55, 1);
+$datepicker-arrow__bg: #f2f2f2;
+
+$datepicker-cell__color: #333;
+$datepicker-cell__bg--hover: #f2f2f2;
+$datepicker-cell__color--disable: rgba(209, 213, 219, 1);
+
+$datepicker-scroll__track: rgb(221, 221, 221);
+$datepicker-scroll__thumb: rgb(117, 117, 117);
+
+$current-color: $datepicker__current;
+$font-size: 16px;
+$orange: #F5A014;
+
+
+.svbDatepicker {
+    display: none;
+    position: relative;
+    z-index: 5;
+    max-width: 350px;
+    //border: 1px solid $datepicker__border;
+    background: #fff;
+    //border-radius: 2px;
+    //box-shadow: 0 4px 12px $datepicker__shadow;
+
+    &--show {
+        display: inline-block;
+    }
+
+    &__wrapper {
+        display: flex;
+        flex-direction: column;
+    }
+
+    &__options {
+        display: flex;
+        align-items: center;
+        padding: 16px 8px;
+    }
+
+    &__pres {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        gap: 4px;
+        font-size: $font-size;
+        margin-right: auto;
+    }
+
+    &__pres-month {
+        color: rgba(31, 41, 55, 1);
+    }
+
+    &__pres-year {
+        color: $datepicker-pres-year__color;
+        transition: color .24s;
+
+        &:hover {
+            color: $datepicker__current;
+        }
+    }
+
+    &__controll {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    &__btn {
+        cursor: pointer;
+        user-select: none;
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        
+        &:hover {
+            & > svg > path {
+                stroke: $orange;
+            }
+        }
+
+        & > svg {
+            width: 11px;
+            height: 17px;
+            // background: $datepicker-arrow__bg;
+
+            & > path {
+                // fill: none;
+                // stroke: #333;
+                // stroke-width: 1.5px;
+                transition: stroke .18s;
+            }
+        }
+    }
+
+    &__time {
+        font-size: $font-size;
+        padding: 20px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        // border-top: 1px solid $datepicker__border;
+    }
+}
+
+@mixin calendar-cell {
+    display: inline-flex;
+    position: relative;
+
+    -moz-box-align: center;
+    align-items: center;
+    -moz-box-pack: center;
+    justify-content: center;
+
+    padding: 0px;
+
+    font-size: $font-size;
+    line-height: 1.66;
+    letter-spacing: 0.03333em;
+    color: $datepicker-cell__color;
+    
+    cursor: pointer;
+    user-select: none;
+    
+    background-color: #fff;
+    border: none;
+}
+
+.svbCalendar {
+    display: flex;
+    flex-direction: column;
+    padding: 0 4px 4px;
+    overflow: auto;
+
+    @-moz-document url-prefix() {
+        scrollbar-width: thin;
+
+        &--year {
+            padding-right: 12px;
+        }
+    }
+
+    &--year {
+        height: 196px;
+    }
+
+    &::-webkit-scrollbar {
+        width: 2px;
+    }
+    
+    &::-webkit-scrollbar-track {
+        box-shadow: none;
+        background-color: $datepicker-scroll__track;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+    background-color: $datepicker-scroll__thumb;
+    }
+      
+
+    &__head {
+        display: flex;
+        -moz-box-pack: center;
+        justify-content: center;
+        -moz-box-align: center;
+        align-items: center;
+    }
+
+    &__week {
+        @include calendar-cell();
+        
+        color: $orange;
+        font-size: $font-size - 1;
+        
+        width: 32px;
+        height: 32px;
+    }
+}
+
+@mixin grid-item {
+    transition: background-color .15s;
+    border-radius: 50%;
+    font-weight: 400;
+
+    &:hover {
+        background-color: $datepicker-cell__bg--hover;
+    }
+
+    &--gray {
+        background-color: transparent;
+        color: $datepicker-cell__color--disable !important;
+    }
+
+    &--selected {
+        color: #fff !important;
+        // font-weight: 700;
+
+        background-color: $current-color !important;
+    }
+
+    &--current {
+        border: 1px solid $current-color !important;
+        background-color: #fff !important;
+        color: $current-color !important;
+        font-weight: 700;
+    }
+
+    &--holiday {
+        // color: #e89600;
+    }
+}
+
+.svbCalendar-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    &__row {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    &__year {
+        @include calendar-cell();
+        @include grid-item();
+        
+        width: 56px;
+        height: 32px;
+    }
+
+    &__day {
+        @include calendar-cell();
+        @include grid-item();
+        
+        background-color: rgba(243, 244, 246, 1);
+        width: 45px;
+        height: 45px;
+                
+    }
+}
+
+.svbTimepicker {
+    position: relative;
+    
+    &__form {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        max-width: 40px;
+    }
+
+    &__input {
+        font-size: 14px
+    }
+
+    &__input .svbInput__text::-webkit-outer-spin-button,
+    &__input .svbInput__text::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    &__input .svbInput__text[type=number] {
+        -moz-appearance: textfield;
+    }
+
+    &__represent {
+        padding: 8px 12px;
+        border-radius: 8px;
+        background-color: rgba(243, 244, 246, 1);
+    }
+}
+
+.svbDatepicker {
+    position: absolute;
+    padding: 16px;
+    left: -16px;
+    right: -16px;
+    max-width: none;
+    box-shadow: 0px 1px 6px -2px rgba(0, 0, 0, 0.03);
+    box-shadow: 0px 1px 16px -4px rgba(0, 0, 0, 0.08);
+}

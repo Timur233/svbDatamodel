@@ -13,10 +13,17 @@ class BaseInput extends SvbElement {
             readOnly:    settings?.readOnly || false,
             editOnly:    settings?.editOnly || false,
             placeholder: settings?.placeholder || 'Введите значение',
+            textAlign:   settings?.textAlign || 'left',
+            multiline:   settings?.multiline || false,
+            height:      settings?.height || false,
             style:       {
                 classList
             }
         };
+
+        if (settings.validate !== undefined) {
+            this.validate = () => settings.validate(this.getValue());
+        }
 
         this.state = {
             value:     null,
@@ -36,7 +43,7 @@ class BaseInput extends SvbElement {
 
     baseInit () {
         this.component = SvbElement.create('div', null, `svb-input ${this.settings.style.classList}`);
-        this.input = SvbElement.create('input', null, null);
+        this.input = SvbElement.create(this.settings.multiline ? 'textarea' : 'input', null, null);
         this.controll = SvbElement.create('div', null, 'svb-input__controll');
         this.slots = SvbElement.create('div', null, 'svb-input__slots');
         this.fragment = null;
@@ -121,6 +128,7 @@ class BaseInput extends SvbElement {
         this.component.setValue = this.setValue.bind(this);
         this.component.getValue = this.getValue.bind(this);
         this.component.setSlot = this.setSlot.bind(this);
+        this.component.validate = this.validate.bind(this);
         this.component.emitError = this.emitError.bind(this);
         this.component.hideError = this.hideError.bind(this);
         this.component.disable = this.disable.bind(this);
@@ -131,6 +139,10 @@ class BaseInput extends SvbElement {
         if (this.type !== 'number') {
             this.state.value = String(value || '');
             this.state.represent = this.state.value.split('\n').join('<br>');
+
+            if (this.settings.multiline) {
+                this.input.value = this.state.value;
+            }
 
             this.input.value = this.state.value;
         } else {
@@ -143,6 +155,10 @@ class BaseInput extends SvbElement {
 
     getValue () {
         return this.state.value;
+    }
+
+    validate () {
+        return true;
     }
 
     emitError () {
@@ -207,7 +223,10 @@ class BaseInput extends SvbElement {
         this.input.value = this.state.value;
         this.input.classList.add('svb-input__text');
         this.input.placeholder = this.settings.placeholder || 'Введите текст';
-        this.input.type = this.type;
+
+        if (!this.settings.multiline) {
+            this.input.type = this.type;
+        }
 
         this.component.setAttribute('title', this.state.represent);
 
