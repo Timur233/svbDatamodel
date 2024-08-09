@@ -65,13 +65,14 @@ class SvbModel {
      * @param {Array} descriptorArray
      */
     setValueByDescriptor (descriptorArray, value) {
-        let requestedObject= this.model;
-        let targetParam = descriptorArray[descriptorArray.length - 1];
+        let requestedObject = this.model;
+        const targetParam = descriptorArray[descriptorArray.length - 1];
 
         for (let i = 0; i < descriptorArray.length - 1; i++) {
             const descriptorItem = descriptorArray[i];
 
             if (i === 0 && descriptorItem === this.name) { continue; }
+
             if (i === 1 && descriptorItem === this.id) { continue; }
 
             requestedObject = requestedObject[descriptorItem];
@@ -136,7 +137,7 @@ class SvbModel {
                 descriptor: reactorData.descriptor,
                 dispatch:   reactorData.emitEvent,
                 set:        (value) => {
-                    this.setValueByDescriptor(reactorDescriptor, value)
+                    this.setValueByDescriptor(reactorDescriptor, value);
                 }
             });
 
@@ -155,38 +156,38 @@ class SvbModel {
             this.reactors = this.reactors.filter(i => i.id !== reactorId);
         }
     }
-    
+
     /**
-     * 
-     * @param {String} descriptor 
-     * @param {Function} callback 
+     *
+     * @param {String} descriptor
+     * @param {Function} callback
      */
     watch (descriptor, callback) {
         this.addReactor({
             descriptor,
-            emitEvent: callback.bind(this.model),
-        })
+            emitEvent: callback.bind(this.model)
+        });
     }
 
     computed (fieldDescriptor, listeningDescriptors, callback) {
-        listeningDescriptors.forEach(descriptor => {
+        listeningDescriptors.forEach((descriptor) => {
             this.addReactor({
                 descriptor,
                 emitEvent: () => {
                     const computedDescriptor = parseDescriptor(fieldDescriptor);
-                    const computedValue = callback.apply(this, listeningDescriptors.map(i => {
+                    const computedValue = callback.apply(this, listeningDescriptors.map((i) => {
                         return this.getValueByDescriptor(parseDescriptor(i));
-                    }))
+                    }));
 
-                    this.setValueByDescriptor(computedDescriptor, computedValue)
+                    this.setValueByDescriptor(computedDescriptor, computedValue);
                 }
-            })
-        })
+            });
+        });
     }
 
-    setFilters(descriptor, filters = []) {
+    setFilters (descriptor, filters = []) {
         const component = this.vm.components.find(i => i.descriptor === descriptor);
-        
+
         component.filters = filters;
     }
 }

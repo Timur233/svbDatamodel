@@ -3,124 +3,124 @@ import '../../../scss/main.scss';
 import SvbElement from '../../../src/components/SvbElement.js';
 
 window.docConcreterequisitions = new SvbModel({
-    mainproject: null,
-    project: null,
-    floor: null,
-    constructives: null,
-    quantity: null,
+    mainproject:       null,
+    project:           null,
+    floor:             null,
+    constructives:     null,
+    quantity:          null,
     concretepumptypes: null,
-    docdate: null,
+    docdate:           null
 }, 'doc', 'concreterequisitions');
 
 const svbForm = window.docConcreterequisitions.vm.form({
     attributes: [
         {
-            label: 'Объект',
+            label:      'Объект',
             descriptor: 'mainproject',
-            settings: {
-                type: 'catalog',
+            settings:   {
+                type:           'catalog',
                 typeObjectName: 'projects',
-                placeholder: 'Начните вводить',
-                filters: {
+                placeholder:    'Начните вводить',
+                filters:        {
                     static: [
                         {
-                            preoperator: 'AND',
-                            attribute: 'isfolder',
-                            filteralias: 'Это блок?',
-                            predicate: '=',
-                            value: true,
+                            preoperator:  'AND',
+                            attribute:    'isfolder',
+                            filteralias:  'Это блок?',
+                            predicate:    '=',
+                            value:        true,
                             postoperator: '',
-                            represent: true
+                            represent:    true
                         }
                     ]
                 }
             }
         },
         {
-            label: 'Блок',
+            label:      'Блок',
             descriptor: 'project',
-            settings: {
-                type: 'catalog',
+            settings:   {
+                type:           'catalog',
                 typeObjectName: 'projects',
-                placeholder: 'Начните вводить',
-                filters: {
+                placeholder:    'Начните вводить',
+                filters:        {
                     static: [
                         {
-                            preoperator: 'AND',
-                            attribute: 'isfolder',
-                            filteralias: 'Это блок?',
-                            predicate: '=',
-                            value: true,
+                            preoperator:  'AND',
+                            attribute:    'isfolder',
+                            filteralias:  'Это блок?',
+                            predicate:    '=',
+                            value:        true,
                             postoperator: '',
-                            represent: true
+                            represent:    true
                         }
                     ]
                 }
             }
         },
         {
-            label: 'Этаж',
+            label:      'Этаж',
             descriptor: 'floor',
-            settings: {
-                type: 'number',
-                placeholder: 'Укажите этаж',
+            settings:   {
+                type:        'number',
+                placeholder: 'Укажите этаж'
             }
         },
         {
-            label: 'Конструктив',
+            label:      'Конструктив',
             descriptor: 'constructives',
-            settings: {
-                type: 'catalog',
+            settings:   {
+                type:           'catalog',
                 typeObjectName: 'constructives',
-                placeholder: 'Начните вводить',
-                filters: {
+                placeholder:    'Начните вводить',
+                filters:        {
                     static: [
                         {
-                            preoperator: 'AND',
-                            attribute: 'forconcrete',
-                            filteralias: 'Это блок?',
-                            predicate: '=',
-                            value: true,
+                            preoperator:  'AND',
+                            attribute:    'forconcrete',
+                            filteralias:  'Это блок?',
+                            predicate:    '=',
+                            value:        true,
                             postoperator: '',
-                            represent: true
+                            represent:    true
                         }
                     ]
                 }
             }
         },
         {
-            label: 'Объем',
+            label:      'Объем',
             descriptor: 'quantity',
-            settings: {
-                type: 'number',
+            settings:   {
+                type:        'number',
                 placeholder: 'Объем',
-                slots: [{
+                slots:       [{
                     content: 'М<sup>3</sup>'
                 }]
             }
         },
         {
-            label: 'Автобетононасос',
+            label:      'Автобетононасос',
             descriptor: 'concretepumptypes',
-            settings: {
-                type: 'catalog',
+            settings:   {
+                type:           'catalog',
                 typeObjectName: 'concretepumptypes',
-                placeholder: 'Начните вводить',
+                placeholder:    'Начните вводить'
             }
         },
         {
-            label: 'Дата и время доставки',
+            label:      'Дата и время доставки',
             descriptor: 'docdate',
-            settings: {
-                type: 'datetime-local',
-                placeholder: '17.04.2024 15:00:00',
+            settings:   {
+                type:        'datetime-local',
+                placeholder: '17.04.2024 15:00:00'
             }
-        },
+        }
     ]
 });
 const summary = window.docConcreterequisitions.vm.custom({
     descriptor: 'summary',
-    render: () => {
+    render:     () => {
         return `
             <div class="svb-form__filed svb-field">
                 <label class="svb-field__label">Дата</label>
@@ -134,7 +134,7 @@ const summary = window.docConcreterequisitions.vm.custom({
                     <span class="svb-text__text">ФИО автоматически*</span>
                 </div> 
             </div>
-        `
+        `;
     }
 });
 const buttonsGroup = SvbElement.create('div', null, 'app-form__buttons-group buttons-group buttons-group--column');
@@ -149,7 +149,7 @@ clearButton.addEventListener('click', () => {
     window.docConcreterequisitions.model.quantity = null;
     window.docConcreterequisitions.model.concretepumptypes = null;
     window.docConcreterequisitions.model.docdate = null;
-})
+});
 
 buttonsGroup.appendChild(saveButton);
 buttonsGroup.appendChild(clearButton);
@@ -159,13 +159,13 @@ window.docConcreterequisitions.watch('mainproject', (value) => {
     svbForm.getAttribute('project').setFilters({
         static: [
             {
-                preoperator: 'AND',
-                attribute: 'folder',
-                filteralias: 'Основной проект',
-                predicate: '=',
-                value: value?.v,
+                preoperator:  'AND',
+                attribute:    'folder',
+                filteralias:  'Основной проект',
+                predicate:    '=',
+                value:        value?.v,
                 postoperator: '',
-                represent: true
+                represent:    true
             }
         ]
     });
@@ -178,37 +178,37 @@ window.docConcreterequisitions.watch('mainproject', (value) => {
 //     }]
 // );
 
-svbForm.getInstance().state.attributes.forEach(attr => {
+svbForm.getInstance().state.attributes.forEach((attr) => {
     const inputInstance = attr.input.getInstance();
-    
-    inputInstance.searchHandling = catalogHelper
+
+    inputInstance.searchHandling = catalogHelper;
 });
 
-async function catalogHelper (typeObjectName, search = '', filters = { "static": [], "user": [] }) {
+async function catalogHelper (typeObjectName, search = '', filters = { static: [], user: [] }) {
     console.log(filters);
     const req = await fetch('https://cab.qazaqstroy.kz/svbapi', {
-        method: 'POST',
+        method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            "session": "6aadd550-648a-4c8d-9a0a-87ce48cc43c7",
-            "type": "catalog",
-            "action": "select",
-            "reqoptions": {
-                "name": typeObjectName,
-                "datatype": "list",
-                "lang": "ru",
-                "filters": filters,
-                "sort": [],
-                "limit": 10,
-                "page": 1,
-                "search": search
+        body:    JSON.stringify({
+            session:    '6aadd550-648a-4c8d-9a0a-87ce48cc43c7',
+            type:       'catalog',
+            action:     'select',
+            reqoptions: {
+                name:     typeObjectName,
+                datatype: 'list',
+                lang:     'ru',
+                filters,
+                sort:     [],
+                limit:    10,
+                page:     1,
+                search
             },
-            "resoptions": {
-                "metadata": false,
-                "view": false,
-                "data": true,
-                "filters": false,
-                "sort": true
+            resoptions: {
+                metadata: false,
+                view:     false,
+                data:     true,
+                filters:  false,
+                sort:     true
             }
         })
     }).then(res => res.json());
@@ -216,13 +216,13 @@ async function catalogHelper (typeObjectName, search = '', filters = { "static":
     if (req.status === 200) {
         const { columns, rows } = req.result.catalog[typeObjectName].list;
 
-        return rows.map(row => {
+        return rows.map((row) => {
             return columns.reduce((acc, curr, index) => {
                 acc[curr] = row[index];
 
                 return acc;
-            }, {})
-        })
+            }, {});
+        });
     }
 
     return [];

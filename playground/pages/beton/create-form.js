@@ -259,6 +259,13 @@ async function renderForm (DM, contentBlock, saveCallback) {
         }
     });
 
+    DM.watch('concrete', (value) => {
+        const measure = svbForm.getAttribute('concrete').getInstance()
+            .state?.additionalInfo?.measure;
+
+        DM.model.measure = measure;
+    });
+
     svbForm.getInstance().state.attributes.forEach((attr) => {
         const inputInstance = attr.input.getInstance();
 
@@ -284,6 +291,8 @@ async function initPage () {
         floor:         null,
         constructives: null,
         quantity:      null,
+        concrete:      null,
+        measure:       null,
         concretepump:  null,
         docdate:       null,
         createDate:    new Date(),
@@ -304,6 +313,7 @@ async function initPage () {
                 project:      DM.model.project.v,
                 storage:      DM.model.storage.v,
                 concrete:     DM.model.concrete.v,
+                measure:      DM.model.measure.v,
                 inserter:     null,
                 quantity:     DM.model.quantity,
                 docnumber:    null,
@@ -341,6 +351,7 @@ async function initPage () {
                 project:      DM.model.project.v,
                 storage:      DM.model.storage.v,
                 concrete:     DM.model.concrete.v,
+                measure:      DM.model.measure.v,
                 quantity:     DM.model.quantity,
                 mainproject:  DM.model.mainproject.v,
                 concretepump: DM.model.concretepump.v,

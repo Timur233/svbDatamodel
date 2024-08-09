@@ -2,6 +2,7 @@ import SvbModel from '../../../src/SvbModel.js';
 import '../../../scss/main.scss';
 import SvbElement from '../../../src/components/SvbElement.js';
 import SvbComponent from '../../../src/SvbComponent.js';
+import SvbFormatter from '../../../src/utils/SvbFormatter.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     await initPage();
@@ -100,7 +101,7 @@ async function renderForm (DM, contentBlock, saveCallback) {
                 <div class="svb-form__filed svb-field">
                     <label class="svb-field__label">Дата</label>
                     <div class="svb-text">
-                        <span class="svb-text__text">${DM.model.createDate}</span>
+                        <span class="svb-text__text">${SvbFormatter.date(DM.model.docdate)}</span>
                     </div> 
                 </div>
                 <div class="svb-form__filed svb-field">
@@ -165,45 +166,6 @@ async function renderForm (DM, contentBlock, saveCallback) {
             font-weight: 500;
             margin-bottom: 16px;
         }
-
-        .reminds-form__title {
-            display: block;
-            font-size: 18px;
-            font-weight: 500;
-            margin-bottom: 16px;
-        }
-        
-        .reminds-form {
-            display: flex;
-            flex-direction: column;
-            background: #fff;
-            padding: 16px;
-            border-radius: 8px;
-        }
-        
-        .reminds-form__label {
-            font-size: 14px;
-            color: rgba(107, 122, 128, 1);
-            margin-bottom: 4px;
-        }
-        
-        .reminds-form__label:after {
-            /* content: '*'; */
-            color: red;
-        }
-        
-        .reminds-form__input {
-            border: 1px solid rgba(209, 213, 219, 1);
-            height: 153px;
-            width: 100%;
-            margin-bottom: 12px;
-            font-size: 14px;
-        }
-        
-        .reminds-form__note {
-            font-size: 14px;
-            color: rgba(156, 163, 175, 1);
-        }
     `));
 
     return svbForm;
@@ -216,20 +178,25 @@ async function initPage () {
     const userData     = await checkSession(session);
     const DM           = new SvbModel({
         pagetitle:           'Приемка',
+        docdate:             new Date(),
         concreterequisition: null,
-        contractor:          null,
-        comment:             null,
-        quantity:            null,
-        remindQuantity:      null,
+        project:             null,
         ourfirm:             null,
         storage:             null,
-        project:             null,
-        storekeeper:         { r: userData.represent, v: userData.uuid },
-        docdate:             new Date(),
-        createDate:          new Date()
-            .toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })
-            .replace(/\//g, '.'),
-        author: { r: userData.represent, v: userData.uuid }
+        contractor:          null,
+
+        supplierconcrete: null,
+        concrete:         null,
+        price:            null,
+        quantity:         null,
+        remindQuantity:   null,
+        comment:          null,
+        cmeasure:         null,
+        measure:          null,
+
+        createDate:  new Date(),
+        storekeeper: { r: userData.represent, v: userData.uuid },
+        author:      { r: userData.represent, v: userData.uuid }
     }, 'doc', 'goodsreceipts');
 
     window.session = session;
@@ -241,23 +208,36 @@ async function initPage () {
 
         window.form = await renderForm(DM, contentBlock, async () => {
             return await insertAction({
-                floor:        DM.model.floor,
-                docdate:      new Date(DM.model.createDate).toISOString().split('T')[0],
-                ourfirm:      DM.model.ourfirm.v,
-                project:      DM.model.project.v,
-                storage:      DM.model.storage.v,
-                concrete:     DM.model.concrete.v,
-                inserter:     null,
-                quantity:     DM.model.quantity,
-                docnumber:    null,
-                mainproject:  DM.model.mainproject.v,
-                concretepump: DM.model.concretepump.v,
-                constructive: DM.model.constructives.v,
-                purchasedate: new Date(DM.model.docdate).toISOString().split('T')[0],
-                writeoffitem: '132538d4-96dc-4b91-b3f7-d61b58d0226e',
-                draft:        false
+                docdate:             SvbFormatter.sqlDate(DM.model.createDate),
+                ourfirm:             DM.model.ourfirm.v,
+                storage:             DM.model.storage.v,
+                storekeeper:         DM.model.author.v,
+                project:             DM.model.project.v,
+                contractor:          DM.model.contractor.v,
+                concreterequisition: DM.model.concreterequisition.v,
+                inserter:            null,
+                draft:               false
             }, {
-                items: ''
+                items: [
+                    {
+                        cnomenclature: DM.model.supplierconcrete.v,
+                        cmeasure:      DM.model.cmeasure.v,
+                        cquantity:     DM.model.quantity,
+                        factcquantity: DM.model.quantity,
+                        sum:           (Number(DM.model.quantity) * Number(DM.model.price)),
+                        nomenclature:  DM.model.concrete.v,
+                        measure:       DM.model.measure.v,
+                        quantity:      DM.model.quantity,
+                        price:         DM.model.price,
+                        factquantity:  DM.model.quantity
+                    }
+                ],
+                concrete: [
+                    {
+                        quantity: DM.model.quantity,
+                        comment:  DM.model.comment
+                    }
+                ]
             })
                 .then((res) => {
                     SvbComponent.pageSuccess('Сохранено', 'Прием бетона сохранен');
@@ -277,7 +257,22 @@ async function initPage () {
             const requisition = await getRequsition(requisitionUuid);
 
             DM.model.concreterequisition = { r: requisition.attr.represent, v: requisition.attr.uuid };
+            DM.model.contractor = { r: requisition.attr.supplier?.r || null, v: requisition.attr.supplier?.v || null };
+            DM.model.ourfirm = { r: requisition.attr.ourfirm?.r || null, v: requisition.attr.ourfirm?.v || null };
+            DM.model.storage = { r: requisition.attr.storage?.r || null, v: requisition.attr.storage?.v || null };
+            DM.model.project = { r: requisition.attr.project?.r || null, v: requisition.attr.project?.v || null };
+            DM.model.price = requisition.attr.price || 1;
+
+            DM.model.supplierconcrete = {
+                r: requisition.attr.supplierconcrete?.r || null,
+                v: requisition.attr.supplierconcrete?.v || null
+            };
+            DM.model.cmeasure = { r: requisition.attr.cmeasure?.r || null, v: requisition.attr.cmeasure?.v || null };
+            DM.model.concrete = { r: requisition.attr.concrete?.r || null, v: requisition.attr.concrete?.v || null };
+            DM.model.measure = { r: requisition.attr.measure?.r || null, v: requisition.attr.measure?.v || null };
+
             window.form.disable('concreterequisition');
+            window.form.disable('contractor');
         }
 
         window.preloader.remove();
@@ -429,37 +424,6 @@ async function catalogHelper (typeObjectName, typeObject, search = '', filters =
     return [];
 }
 
-async function getRequsitionData (uuid) {
-    return await fetch('https://cab.qazaqstroy.kz/svbapi', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({
-            session:    window.session,
-            type:       'document',
-            action:     'select',
-            reqoptions: {
-                name:     'concreterequisitions',
-                datatype: 'instance',
-                instance: uuid,
-                lang:     'ru',
-                view:     null
-            },
-            resoptions: {
-                metadata:   true,
-                view:       true,
-                data:       true,
-                filters:    true,
-                sort:       true,
-                dataparams: {
-                    header: true
-                }
-            }
-        })
-    })
-        .then(res => res.json())
-        .catch(e => e);
-}
-
 function filesActions () {
     return {
         upload: async function (file) {
@@ -508,10 +472,10 @@ async function insertAction (data, tables) {
             reqoptions: {
                 datatype: 'instance',
                 instance: '',
-                name:     'concreterequisitions',
+                name:     'goodsreceipts',
                 data:     {
                     instance: data,
-                    tables:   {}
+                    tables
                 },
                 lang: 'ru'
             },
@@ -529,7 +493,7 @@ async function insertAction (data, tables) {
         .catch(e => e);
 }
 
-async function updateAction (uuid, data) {
+async function updateAction (uuid, data, tables) {
     return await fetch('https://cab.qazaqstroy.kz/svbapi', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -540,10 +504,10 @@ async function updateAction (uuid, data) {
             reqoptions: {
                 datatype: 'instance',
                 instance: uuid,
-                name:     'concreterequisitions',
+                name:     'goodsreceipts',
                 data:     {
                     instance: data,
-                    tables:   {}
+                    tables
                 },
                 lang: 'ru'
             },
