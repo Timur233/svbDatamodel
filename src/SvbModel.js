@@ -45,6 +45,7 @@ class SvbModel {
      * @param {Array} descriptorArray
      */
     getValueByDescriptor (descriptorArray) {
+        let model = this.model;
         let requestedValue = null;
 
         for (let i = 0; i < descriptorArray.length; i++) {
@@ -54,7 +55,8 @@ class SvbModel {
 
             if (i === 1 && descriptorItem === this.id) { continue; }
 
-            requestedValue = this.model[descriptorItem];
+            requestedValue = model?.[descriptorItem] || undefined;
+            model = model?.[descriptorItem] || undefined;
         }
 
         return requestedValue;

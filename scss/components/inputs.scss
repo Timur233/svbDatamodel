@@ -36,7 +36,7 @@
     }
 
     &--error {
-        & input {
+        & input, & textarea {
             border-color: #FF4443;
         }
     }

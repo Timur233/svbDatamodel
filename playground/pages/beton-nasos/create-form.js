@@ -254,7 +254,7 @@ async function initPage () {
                 autonumber:   DM.model.autonumber,
                 supplier:     DM.model.supplier.v,
                 startdate:    SvbFormatter.sqlDate(DM.model.startdate),
-                finihdate:    SvbFormatter.sqlDate(DM.model.startdate),
+                finihdate:    SvbFormatter.sqlDate(DM.model.finihdate),
                 scan:         window.fileUploader.getValue(),
 
                 draft: false
@@ -287,7 +287,7 @@ async function initPage () {
                 autonumber:   DM.model.autonumber,
                 supplier:     DM.model.supplier.v,
                 startdate:    SvbFormatter.sqlDate(DM.model.startdate),
-                finihdate:    SvbFormatter.sqlDate(DM.model.startdate),
+                finihdate:    SvbFormatter.sqlDate(DM.model.finihdate),
                 scan:         window.fileUploader.getValue()
             })
                 .then((res) => {

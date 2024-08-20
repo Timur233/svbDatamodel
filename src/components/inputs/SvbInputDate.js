@@ -1,6 +1,8 @@
 import BaseInput from './BaseInput';
 import SvbDatepicker from '../SvbDatepicker';
 import SvbFormatter from '../../utils/SvbFormatter';
+import SvbElement from '../SvbElement';
+import SvbModal from '../SvbModal';
 
 class SvbInputDate extends BaseInput {
     constructor (viewSetting, classList) {
@@ -28,7 +30,9 @@ class SvbInputDate extends BaseInput {
             e.preventDefault();
             e.stopPropagation();
 
-            this.renderDatePicker();
+            this.input.blur();
+            this.datepicker.utilityObject.setDate(this.state.date);
+            this.fragment.show();
         });
     }
 
@@ -57,17 +61,18 @@ class SvbInputDate extends BaseInput {
                 this.state.type === 'timestamp' ? ` ${dateStr.hour}:${dateStr.minute}:${dateStr.second}` : ''}`;
             this.state.represent = `${dateStr.day}.${dateStr.month}.${dateStr.year}${
                 this.state.type === 'timestamp' ? ` ${dateStr.hour}:${dateStr.minute}:${dateStr.second}` : ''}`;
+            this.state.date = `${dateStr.year}-${dateStr.month}-${dateStr.day}${
+                    this.state.type === 'timestamp' ? ` ${dateStr.hour}:${dateStr.minute}:${dateStr.second}` : ''}`;
         } else {
             this.state.value = '';
             this.state.represent = '';
+            this.state.date = '';
         }
 
-        this.state.date = `${dateStr.year}-${dateStr.month}-${dateStr.day}${
-            this.state.type === 'timestamp' ? ` ${dateStr.hour}:${dateStr.minute}:${dateStr.second}` : ''}`;
-
-        if (this.fragment) this.fragment.utilityObject.setDate(this.state.date);
+        if (this.datepicker) this.datepicker.utilityObject.setDate(this.state.date);
 
         this.input.value = this.state.represent;
+        this.component.classList.remove('svb-input--error');
     }
 
     getValue () {
@@ -93,13 +98,35 @@ class SvbInputDate extends BaseInput {
         if (this.settings.readOnly) return;
 
         if (this.fragment === null) {
-            this.fragment = new SvbDatepicker({
+            const oldDate = this.state.date;
+            const buttons = SvbElement.create('div', null, 'svb-modal__buttons');
+            const cancel = SvbElement.create('button', null, 'svb-modal__button btn btn--white', 'Отмена');
+            const accept = SvbElement.create('button', null, 'svb-modal__button btn btn--primary', 'Применить');
+
+            this.datepicker = new SvbDatepicker({
                 date:       this.state.date,
                 classList:  'svb-input__datepicker',
                 timepicker: this.state.type === 'timestamp'
             });
 
-            this.fragment.utilityObject.eventChange = (selected) => {
+            this.fragment = new SvbModal(this.state.date, 'bottom', this.datepicker).component;
+
+            cancel.addEventListener('click', () => {
+                this.setValue(oldDate);
+                this.fragment.hide();
+            });
+
+            accept.addEventListener('click', () => {
+                if (this.state.date !== '') {
+                    this.fragment.hide();
+                }
+            });
+
+            buttons.appendChild(cancel);
+            buttons.appendChild(accept);
+            this.fragment.setFooter(buttons);
+
+            this.datepicker.utilityObject.eventChange = (selected) => {
                 this.state.date = `${selected.year}-${selected.month}-${selected.day}${
                     this.state.type === 'timestamp' ? ` ${selected.hour}:${selected.minute}:${selected.second}` : ''}`;
 
@@ -107,9 +134,10 @@ class SvbInputDate extends BaseInput {
                     this.state.type === 'timestamp' ? ` ${selected.hour}:${selected.minute}:${selected.second}` : ''}`);
 
                 this.renderInput();
+                this.fragment.setTitle(this.state.value);
 
                 if (selected.hideDatepicker) {
-                    this.fragment.utilityObject.hideDatePicker();
+                    // this.fragment.utilityObject.hideDatePicker();
                 }
 
                 return this.component.dispatchEvent(new CustomEvent('svb:change', {
@@ -119,7 +147,7 @@ class SvbInputDate extends BaseInput {
                 }));
             };
 
-            this.fragment.utilityObject.eventTab = (event) => {
+            this.datepicker.utilityObject.eventTab = (event) => {
                 if (event.shiftKey === true) {
                     this.bypassFields(-1);
 
@@ -128,8 +156,6 @@ class SvbInputDate extends BaseInput {
 
                 this.bypassFields(1);
             };
-
-            this.component.appendChild(this.fragment);
 
             return;
         }
@@ -441,39 +467,39 @@ class SvbInputDate extends BaseInput {
         }
 
         input.addEventListener('input', formatDateTime);
-        input.addEventListener('focus', () => {
-            const instance = input.parentNode.utilityObject;
-            const dateObject = instance?.state?.date
-                ? new Date(instance.state.date)
-                : new Date();
-            const dateString = {
-                day:    dateObject.getDate().toString().padStart(2, '0'),
-                month:  (dateObject.getMonth() + 1).toString().padStart(2, '0'),
-                year:   dateObject.getFullYear(),
-                hour:   dateObject.getHours().toString().padStart(2, '0'),
-                minute: dateObject.getMinutes().toString().padStart(2, '0'),
-                second: dateObject.getSeconds().toString().padStart(2, '0')
-            };
+        // input.addEventListener('focus', () => {
+        //     const instance = input.parentNode.utilityObject;
+        //     const dateObject = instance?.state?.date
+        //         ? new Date(instance.state.date)
+        //         : new Date();
+        //     const dateString = {
+        //         day:    dateObject.getDate().toString().padStart(2, '0'),
+        //         month:  (dateObject.getMonth() + 1).toString().padStart(2, '0'),
+        //         year:   dateObject.getFullYear(),
+        //         hour:   dateObject.getHours().toString().padStart(2, '0'),
+        //         minute: dateObject.getMinutes().toString().padStart(2, '0'),
+        //         second: dateObject.getSeconds().toString().padStart(2, '0')
+        //     };
 
-            state.items[0].value = dateString.day;
-            state.items[0].isActive = true;
-            state.items[1].value = dateString.month;
-            state.items[1].isActive = false;
-            state.items[2].value = dateString.year;
-            state.items[2].isActive = false;
+        //     state.items[0].value = dateString.day;
+        //     state.items[0].isActive = true;
+        //     state.items[1].value = dateString.month;
+        //     state.items[1].isActive = false;
+        //     state.items[2].value = dateString.year;
+        //     state.items[2].isActive = false;
 
-            if (isTimestamp) {
-                state.items[3].value = dateString.hour;
-                state.items[3].isActive = false;
-                state.items[4].value = dateString.minute;
-                state.items[4].isActive = false;
-                state.items[5].value = dateString.second;
-                state.items[5].isActive = false;
-            }
+        //     if (isTimestamp) {
+        //         state.items[3].value = dateString.hour;
+        //         state.items[3].isActive = false;
+        //         state.items[4].value = dateString.minute;
+        //         state.items[4].isActive = false;
+        //         state.items[5].value = dateString.second;
+        //         state.items[5].isActive = false;
+        //     }
 
-            input.value = generateResult();
-            selectCurrent();
-        });
+        //     input.value = generateResult();
+        //     selectCurrent();
+        // });
         input.addEventListener('click', (event) => {
             event.preventDefault();
 

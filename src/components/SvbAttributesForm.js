@@ -24,6 +24,7 @@ class SvbAttributesForm extends SvbElement {
         this.component.validate = this.validate.bind(this);
         this.component.disable = this.disable.bind(this);
         this.component.enable = this.enable.bind(this);
+        this.component.getField = this.getField.bind(this);
     }
 
     getAttribute (name) {
@@ -36,7 +37,7 @@ class SvbAttributesForm extends SvbElement {
         this.state.attributes.forEach((attr) => {
             const attrSettings = attr.settings;
             const attrValue = attr.input.getValue();
-            const inputValidate = attr.input.validate();
+            const inputValidate = attr.input?.validate ? attr.input?.validate() : true;
 
             if (attrSettings.required) {
                 let valueInBool = true;
@@ -65,7 +66,9 @@ class SvbAttributesForm extends SvbElement {
 
     disable (descriptor = null) {
         this.state.attributes.forEach((attr) => {
-            if (descriptor === null || attr.descriptor === descriptor) { attr.input.disable(); }
+            if (descriptor === null || attr.descriptor === descriptor) {
+                if (attr.input.disable) attr.input.disable();
+            }
         });
     }
 
@@ -73,6 +76,12 @@ class SvbAttributesForm extends SvbElement {
         this.state.attributes.forEach((attr) => {
             if (descriptor === null || attr.descriptor === descriptor) { attr.input.enable(); }
         });
+    }
+
+    getField (descriptor) {
+        if (descriptor) {
+            return this.state.attributes.find(attr => attr.descriptor === descriptor);
+        }
     }
 
     renderFields () {
@@ -86,6 +95,9 @@ class SvbAttributesForm extends SvbElement {
             );
 
             if (attribute?.label !== undefined) { wrapper.appendChild(label); }
+
+            attribute.show = () => { wrapper.addStyles({ display: '' }); };
+            attribute.hide = () => { wrapper.addStyles({ display: 'none' }); };
 
             wrapper.appendChild(attribute.input);
 

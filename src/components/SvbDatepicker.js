@@ -146,11 +146,12 @@ class SvbDatepicker extends SvbElement {
                 month: date.getMonth(),
                 year:  date.getFullYear()
             };
+
+            this.renderCalendar();
         }
     }
 
     selectTime () {
-        console.log(1);
         this.eventChange({
             day:            String(this.state.selected.day).padStart(2, '0'),
             month:          String(this.state.selected.month + 1).padStart(2, '0'),

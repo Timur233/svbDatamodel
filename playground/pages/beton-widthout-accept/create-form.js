@@ -3,14 +3,12 @@ import '../../../scss/main.scss';
 import SvbElement from '../../../src/components/SvbElement.js';
 import SvbComponent from '../../../src/SvbComponent.js';
 import SvbFormatter from '../../../src/utils/SvbFormatter.js';
-import { SvbAPI } from '../../../src/services/SvbAPI.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     await initPage();
 });
 
 async function renderForm (DM, contentBlock, saveCallback) {
-    const api = new SvbAPI('https://cab.qazaqstroy.kz/', DM.model.session);
     const title = DM.vm.custom({
         descriptor: 'pageTitle',
         render:     () => {
@@ -21,6 +19,7 @@ async function renderForm (DM, contentBlock, saveCallback) {
             `;
         }
     });
+    const fileUploader = DM.vm.fileUploader('Фото зеленки');
     const svbForm = DM.vm.form({
         attributes: [
             {
@@ -76,6 +75,29 @@ async function renderForm (DM, contentBlock, saveCallback) {
                     required:    true,
                     type:        'number',
                     placeholder: 'Укажите этаж'
+                }
+            },
+            {
+                label:      'Конструктив',
+                descriptor: 'constructives',
+                settings:   {
+                    required:       true,
+                    type:           'catalog',
+                    typeObjectName: 'constructives',
+                    placeholder:    'Начните вводить',
+                    filters:        {
+                        static: [
+                            {
+                                preoperator:  'AND',
+                                attribute:    'forconcrete',
+                                filteralias:  'Это блок?',
+                                predicate:    '=',
+                                value:        true,
+                                postoperator: '',
+                                represent:    true
+                            }
+                        ]
+                    }
                 }
             },
             {
@@ -145,8 +167,6 @@ async function renderForm (DM, contentBlock, saveCallback) {
                         const optionLabel = SvbElement.create('span', null, null, i.represent);
                         const optionInput =  SvbElement.create('input', null, 'checkbox-group__input');
 
-                        if (i.value === DM.model.concrete_param) optionInput.checked = true;
-
                         optionInput.type = 'checkbox';
                         optionInput.value = i.value;
                         optionInput.addEventListener('change', (e) => {
@@ -176,7 +196,7 @@ async function renderForm (DM, contentBlock, saveCallback) {
 
                     return component;
                 },
-                update: function (value = '') {
+                update: function (value) {
                     const currentInput = this.component.checkBoxList.find(i => i.value === value);
 
                     this.component.checkBoxList.forEach((i) => { i.checked = false; });
@@ -205,30 +225,7 @@ async function renderForm (DM, contentBlock, saveCallback) {
                 }
             },
             {
-                label:      'Конструктив',
-                descriptor: 'constructives',
-                settings:   {
-                    required:       true,
-                    type:           'catalog',
-                    typeObjectName: 'constructives',
-                    placeholder:    'Начните вводить',
-                    filters:        {
-                        static: [
-                            {
-                                preoperator:  'AND',
-                                attribute:    'forconcrete',
-                                filteralias:  'Это блок?',
-                                predicate:    '=',
-                                value:        true,
-                                postoperator: '',
-                                represent:    true
-                            }
-                        ]
-                    }
-                }
-            },
-            {
-                label:      'Объем',
+                label:      'Фактический объем',
                 descriptor: 'quantity',
                 settings:   {
                     required:    true,
@@ -245,6 +242,50 @@ async function renderForm (DM, contentBlock, saveCallback) {
                 }
             },
             {
+                label:      'Остаток',
+                descriptor: 'remains',
+                settings:   {
+                    required:    false,
+                    type:        'number',
+                    placeholder: 'Объем',
+                    slots:       [{
+                        content: 'М<sup>3</sup>'
+                    }]
+                }
+            },
+            {
+                label:      'Оси',
+                descriptor: 'axes',
+                settings:   {
+                    required:    true,
+                    type:        'text',
+                    placeholder: ''
+                }
+            },
+            {
+                label:      'Поставщик',
+                descriptor: 'supplier',
+                settings:   {
+                    required:       true,
+                    type:           'catalog',
+                    typeObjectName: 'organizations',
+                    placeholder:    'Начните вводить',
+                    filters:        {
+                        static: [
+                            {
+                                preoperator:  'AND',
+                                attribute:    'type',
+                                filteralias:  'Тип',
+                                predicate:    '=',
+                                value:        '048cffb9-d412-4641-8c54-8095a8a185d9',
+                                postoperator: '',
+                                represent:    'Поставщик бетона'
+                            }
+                        ]
+                    }
+                }
+            },
+            {
                 label:      'Автобетононасос',
                 descriptor: 'concretepump',
                 settings:   {
@@ -252,15 +293,6 @@ async function renderForm (DM, contentBlock, saveCallback) {
                     type:           'catalog',
                     typeObjectName: 'concretepumptypes',
                     placeholder:    'Начните вводить'
-                }
-            },
-            {
-                label:      'Дата и время доставки',
-                descriptor: 'docdate',
-                settings:   {
-                    required:    true,
-                    type:        'datetime-local',
-                    placeholder: SvbFormatter.timestamp(new Date())
                 }
             },
             {
@@ -299,9 +331,20 @@ async function renderForm (DM, contentBlock, saveCallback) {
     const saveButton = SvbElement.create('button', null, 'btn btn--primary', 'Сохранить');
 
     saveButton.addEventListener('click', async () => {
-        if (svbForm.validate()) {
+        DM.model.greenscan = fileUploader.getValue();
+
+        if (svbForm.validate() && DM.model.greenscan.length > 0) {
             await saveCallback();
         } else {
+            if (DM.model.greenscan.length === 0) {
+                SvbComponent.pageError('Внимание', 'Нужно прикрепить фото зеленки', [{
+                    title:    'Закрыть',
+                    callback: function () { this.close(); }
+                }]);
+
+                return;
+            }
+
             SvbComponent.pageError('Внимание', 'Не заполнены обязательные поля', [{
                 title:    'Закрыть',
                 callback: function () { this.close(); }
@@ -332,49 +375,26 @@ async function renderForm (DM, contentBlock, saveCallback) {
         });
 
         if (storage?.v) {
-            api.instance('catalog', 'storages', storage.v)
-                .then((res) => {
-                    if (res.status === 200) {
-                        const { instance } = res;
-                        const ourFirm = {
-                            r: instance.ourfirm.r,
-                            v: instance.ourfirm.v
-                        };
+            getStorageData(storage.v)
+                .then((data) => {
+                    const { instance } = data.result.catalog.storages;
+                    const ourFirm = {
+                        r: instance.attr.ourfirm.r,
+                        v: instance.attr.ourfirm.v
+                    };
 
-                        DM.model.ourfirm = ourFirm;
-                        DM.model.storage = storage;
-                    }
+                    DM.model.ourfirm = ourFirm;
+                    DM.model.storage = storage;
                 });
-        }
-    });
-
-    DM.watch('supplier', (value) => {
-        if (value.v) {
-            svbForm.disable();
         }
     });
 
     function setConcreteNomenclature (codeA, codeB) {
         if (codeA && codeB !== null) {
-            api.list('catalog', 'nomenclature', null, {
-                filters: {
-                    static: [
-                        {
-                            preoperator:  'AND',
-                            attribute:    'code',
-                            filteralias:  'Код',
-                            predicate:    '=',
-                            value:        `${codeA}${codeB !== '' ? '_' + codeB : ''}`,
-                            postoperator: '',
-                            represent:    `${codeA}${codeB !== '' ? '_' + codeB : ''}`
-                        }
-                    ],
-                    user: []
-                }
-            })
-                .then((res) => {
-                    if (res.rows.length > 0) {
-                        const concrete = res.rows[0];
+            getConcrete(`${codeA}${codeB !== '' ? '_' + codeB : ''}`)
+                .then((rows) => {
+                    if (rows.length > 0) {
+                        const concrete = rows[0];
 
                         DM.model.concrete = {
                             r: concrete.represent,
@@ -400,7 +420,14 @@ async function renderForm (DM, contentBlock, saveCallback) {
         }
     });
 
+    fileUploader.getInstance()
+        .loadMethod = filesActions().upload.bind(fileUploader.getInstance());
+
+    fileUploader.getInstance()
+        .removeMethod = filesActions().remove.bind(fileUploader.getInstance());
+
     contentBlock.appendChild(title);
+    contentBlock.appendChild(fileUploader);
     contentBlock.appendChild(svbForm);
     contentBlock.appendChild(summary);
     contentBlock.appendChild(buttonsGroup);
@@ -411,10 +438,8 @@ async function initPage () {
     const session      = getCookie('session');
     const contentBlock = document.querySelector('#content-block');
     const userData     = await checkSession(session);
-    const api = new SvbAPI('https://cab.qazaqstroy.kz/', session);
     const DM           = new SvbModel({
-        session,
-        pageTitle:      'Заявка на бетон',
+        pageTitle:      'Прием бетона без заявки',
         ourfirm:        null,
         mainproject:    null,
         project:        null,
@@ -423,24 +448,29 @@ async function initPage () {
         quantity:       null,
         concrete:       null,
         concrete_mark:  null,
-        concrete_param: null,
+        concrete_param: '',
         measure:        null,
         concretepump:   null,
         docdate:        null,
         createDate:     new Date(),
         supplier:       null,
+        greenscan:      null,
+        axes:           null,
+        remains:        null,
         comment:        null,
-        author:         { r: userData.represent, v: userData.uuid }
-    }, 'doc', 'concreterequisitions');
+        author:         { r: userData.represent, v: userData.uuid },
+        staffer:        { r: userData.userSettings.employee.r, v: userData.userSettings.employee.v }
+    }, 'doc', 'goodsreceipts_widthout_requisitions');
 
     window.session = session;
     window.preloader = SvbComponent.pagePreloader('Загрузка', '');
 
     if (docUuid === 'new') {
         await renderForm(DM, contentBlock, async () => {
-            return await api.insert('document', 'concreterequisitions', null, {
+            return await insertAction({
                 floor:        DM.model.floor,
                 docdate:      SvbFormatter.sqlDate(DM.model.createDate),
+                purchasedate: SvbFormatter.sqlTimestamp(DM.model.createDate),
                 ourfirm:      DM.model.ourfirm.v,
                 project:      DM.model.project.v,
                 storage:      DM.model.storage.v,
@@ -453,7 +483,17 @@ async function initPage () {
                 concretepump: DM.model.concretepump.v,
                 constructive: DM.model.constructives.v,
                 comment:      DM.model.comment,
-                purchasedate: SvbFormatter.sqlTimestamp(DM.model.docdate),
+
+                supplier:         DM.model.supplier.v,
+                acceptor:         DM.model.staffer.v,
+                acceptanceonly:   true,
+                accepted:         true,
+                acceptancedate:   SvbFormatter.sqlTimestamp(DM.model.createDate),
+                greenscan:        DM.model.greenscan,
+                acceptedquantity: DM.model.quantity,
+                axes:             DM.model.axes,
+                remains:          DM.model.remains,
+
                 writeoffitem: '132538d4-96dc-4b91-b3f7-d61b58d0226e',
                 draft:        false
             })
@@ -470,75 +510,6 @@ async function initPage () {
                         .error({ message: e });
                 });
         });
-
-        window.preloader.remove();
-    } else {
-        const request = await api.instance('document', 'concreterequisitions', docUuid);
-        const concrete = await api.instance('catalog', 'nomenclature', request.instance.concrete.v);
-        const instanceData = request.instance;
-        const concreteData = concrete.instance;
-        const concreteCodeArray = concreteData.code.split('_').reverse();
-        const concreteMark = concreteCodeArray[0] === 'sulfateresistant' ||
-            concreteCodeArray[0] === 'hydrophobic' ||
-            concreteCodeArray[0] === 'antifreeze'
-            ? concreteCodeArray[0]
-            : '';
-
-        await renderForm(DM, contentBlock, async () => {
-            return await api.update('document', 'concreterequisitions', DM.model.uuid, {
-                floor:        DM.model.floor,
-                ourfirm:      DM.model.ourfirm.v,
-                project:      DM.model.project.v,
-                storage:      DM.model.storage.v,
-                concrete:     DM.model.concrete.v,
-                measure:      DM.model.measure.v,
-                quantity:     DM.model.quantity,
-                mainproject:  DM.model.mainproject.v,
-                concretepump: DM.model.concretepump.v,
-                constructive: DM.model.constructives.v,
-                comment:      DM.model.comment,
-                purchasedate: SvbFormatter.sqlTimestamp(DM.model.docdate)
-            })
-                .then((res) => {
-                    SvbComponent.pageSuccess('Сохранено', 'Прием бетона сохранен');
-                    flutterMessages()
-                        .success({
-                            code: res.status,
-                            uuid: DM.model.uuid
-                        });
-                })
-                .catch((e) => {
-                    flutterMessages()
-                        .error({ message: e });
-                });
-        });
-
-        console.log(concreteCodeArray[0]);
-
-        DM.model.pageTitle = `Заявка на бетон №${instanceData.docnumber} от ${
-            SvbFormatter.date(instanceData.insertdate)}`;
-        DM.model.uuid = instanceData.uuid;
-        DM.model.ourfirm = instanceData.ourfirm;
-        DM.model.storage = instanceData.storage;
-        DM.model.mainproject = instanceData.mainproject;
-        DM.model.project = instanceData.project;
-        DM.model.floor = instanceData.floor;
-        DM.model.constructives = instanceData.constructive;
-        DM.model.quantity = instanceData.quantity;
-        DM.model.concretepump = instanceData.concretepump;
-        DM.model.measure = concreteData.measure;
-        DM.model.concrete = instanceData.concrete;
-        DM.model.concrete_mark = { r: concreteData.represent, v: concreteData.code };
-        DM.model.concrete_param = concreteCodeArray[0] === 'sulfateresistant' ||
-            concreteCodeArray[0] === 'hydrophobic' ||
-            concreteCodeArray[0] === 'antifreeze'
-            ? concreteCodeArray[0]
-            : '';
-        DM.model.supplier = instanceData.supplier;
-        DM.model.comment = instanceData.comment;
-        DM.model.docdate = new Date(instanceData.purchasedate || null)?.toISOString()?.slice(0, 16);
-        DM.model.createDate = new Date(instanceData.insertdate || null)?.toISOString()?.slice(0, 16);
-        DM.model.author = instanceData.inserter;
 
         window.preloader.remove();
     }
@@ -575,20 +546,207 @@ async function checkSession (session) {
 }
 
 async function catalogHelper (typeObjectName, typeObject, search = '', filters = { static: [], user: [] }) {
-    const api = new SvbAPI('https://cab.qazaqstroy.kz/', '9adb6aab-43ef-429b-9a8a-0c3967d4228c');
-    const req = await api.list(typeObject, typeObjectName, search, {
-        filters,
-        sort:  [],
-        limit: 10,
-        page:  1,
-        search
+    const req = await fetch('https://cab.qazaqstroy.kz/svbapi', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+            session:    window.session,
+            type:       typeObject,
+            action:     'select',
+            reqoptions: {
+                name:     typeObjectName,
+                datatype: 'list',
+                lang:     'ru',
+                filters,
+                sort:     [],
+                limit:    10,
+                page:     1,
+                search
+            },
+            resoptions: {
+                metadata: false,
+                view:     false,
+                data:     true,
+                filters:  false,
+                sort:     true
+            }
+        })
+    }).then((res) => {
+        return res.json();
     });
 
     if (req.status === 200) {
-        return req.rows;
+        const { columns, rows } = req.result[typeObject][typeObjectName].list;
+
+        return rows.map((row) => {
+            return columns.reduce((acc, curr, index) => {
+                acc[curr] = row[index];
+
+                return acc;
+            }, {});
+        });
     }
 
     return [];
+}
+
+async function getStorageData (uuid) {
+    return await fetch('https://cab.qazaqstroy.kz/svbapi', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+            session:    window.session,
+            type:       'catalog',
+            action:     'select',
+            reqoptions: {
+                name:     'storages',
+                datatype: 'instance',
+                instance: uuid,
+                lang:     'ru',
+                view:     null
+            },
+            resoptions: {
+                metadata:   true,
+                view:       true,
+                data:       true,
+                filters:    true,
+                sort:       true,
+                dataparams: {
+                    header: true
+                }
+            }
+        })
+    })
+        .then(res => res.json())
+        .catch(e => e);
+}
+
+async function getConcrete (code) {
+    return await fetch('https://cab.qazaqstroy.kz/svbapi', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+            session:    window.session,
+            type:       'catalog',
+            action:     'select',
+            reqoptions: {
+                name:     'nomenclature',
+                datatype: 'list',
+                lang:     'ru',
+                filters:  {
+                    static: [
+                        {
+                            preoperator:  'AND',
+                            attribute:    'code',
+                            filteralias:  'Код',
+                            predicate:    '=',
+                            value:        code,
+                            postoperator: '',
+                            represent:    code
+                        }
+                    ],
+                    user: []
+                },
+                sort:             [],
+                limit:            25,
+                page:             1,
+                search:           '',
+                view:             null,
+                selectedInstance: null
+            },
+            resoptions: {
+                metadata: true,
+                view:     true,
+                data:     true,
+                filters:  true,
+                sort:     true,
+                tree:     false
+            }
+        })
+    })
+        .then(res => res.json())
+        .then((res) => {
+            const columns = res?.result?.catalog?.nomenclature?.list?.columns || {};
+            const rows = res?.result?.catalog?.nomenclature?.list?.rows || [];
+
+            return rows.map((row) => {
+                return columns.reduce((acc, key, index) => {
+                    acc[key] = row[index];
+
+                    return acc;
+                }, {});
+            });
+        })
+        .catch(e => e);
+}
+
+async function insertAction (data) {
+    return await fetch('https://cab.qazaqstroy.kz/svbapi', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+            session:    window.session,
+            type:       'document',
+            action:     'insert',
+            reqoptions: {
+                datatype: 'instance',
+                instance: '',
+                name:     'concreterequisitions',
+                data:     {
+                    instance: data,
+                    tables:   {}
+                },
+                lang: 'ru'
+            },
+            resoptions: {
+                metadata:   false,
+                view:       false,
+                data:       true,
+                dataparams: {
+                    header: true
+                }
+            }
+        })
+    })
+        .then(res => res.json())
+        .catch(e => e);
+}
+
+function filesActions () {
+    return {
+        upload: async function (file) {
+            const formData = new FormData();
+
+            formData.append('file', file);
+
+            return fetch('https://cab.qazaqstroy.kz/files/upload', {
+                method: 'POST',
+                body:   formData
+            })
+                .then(res => res.json())
+                .then(res => ({
+                    name:  res.name,
+                    url:   res.url,
+                    value: res.url
+                }));
+        },
+        preview: async function (uuid) {
+            const response = await fetch('https://cab.qazaqstroy.kz/files/download', {
+                method: 'POST',
+                body:   JSON.stringify({ url: uuid })
+            });
+            const blob = await response.blob();
+            const reader = new FileReader();
+            const base64data = await new Promise((resolve, reject) => {
+                reader.onloadend = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+
+            return base64data;
+        },
+        remove: async () => {}
+    };
 }
 
 function flutterMessages () {

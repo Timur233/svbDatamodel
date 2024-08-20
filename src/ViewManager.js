@@ -1,7 +1,6 @@
 'use strict';
 
 import SvbComponent from './SvbComponent';
-import { parseDescriptor } from './utilities';
 
 class ViewManager {
     constructor (dataModel) {
@@ -78,6 +77,7 @@ class ViewManager {
             componentData.component = component;
             componentData.wrapper = componentWrapper;
             componentData.eventChange = componentObject.reactor.set;
+            componentWrapper.getValue = component.getValue;
             componentWrapper.setContent(component);
 
             return componentWrapper;
@@ -104,11 +104,11 @@ class ViewManager {
     }
 
     form (componentData) {
-        const compoenntId = componentData.id || Math.floor(Math.random() * (234234234 + 1)).toString();
+        // const compoenntId = componentData.id || Math.floor(Math.random() * (234234234 + 1)).toString();
         const attributes = componentData.attributes.map((attr) => {
             return {
                 ...attr,
-                input: this.input(attr)
+                input: attr?.settings?.isCustom ? this.custom(attr) : this.input(attr)
             };
         });
         const form = SvbComponent.attributesForm(attributes);
@@ -118,6 +118,14 @@ class ViewManager {
 
     fileUploader (title) {
         return SvbComponent.fileUploader(title);
+    }
+
+    modal (title, content) {
+        return SvbComponent.modal(title, content, document.querySelector('#content-block'));
+    }
+
+    bottomConfirm (title, content) {
+        return SvbComponent.bottomConfirm(title, content, document.querySelector('#content-block'));
     }
 }
 

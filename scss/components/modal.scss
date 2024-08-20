@@ -1,0 +1,87 @@
+.svb-modal {
+    position: fixed;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    transition: ease-in-out background-color .12s;
+    background-color: transparent;
+
+    &--show {
+        background-color: rgba(55, 65, 81, 0.7);
+        & .svb-modal__wrapper--type-bottom {
+            transform: translateY(0%);
+        }
+    }
+
+    &__wrapper {
+        position: absolute;
+        left: 16px;
+        right: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+
+        display: flex;
+        padding: 16px;
+        flex-direction: column;
+
+        max-width: 100%;
+        max-height: 100%;
+
+        border-radius: 8px;
+        background-color: #fff;
+
+        &--type-bottom {
+            max-height: 100vh;
+            top: auto;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            transform: translateY(150%);
+            transition: ease-in-out transform .2s;
+
+            border-radius: 8px 8px 0px 0px;
+        }
+    }
+
+    &__header {
+        width: 100%;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    &__title {
+        font-size: 16px;
+        color: rgba(31, 41, 55, 1);
+    }
+
+    &__close-btn {
+        padding: 0;
+        outline: none;
+        border: none;
+        background: none;
+    }
+
+    &__body {
+        // overflow: auto;
+    }
+
+    &__footer {
+        width: 100%;
+        margin-top: 20px;
+    }
+}
+
+.svb-modal__buttons {
+    display: flex;
+    justify-content: space-around;
+    gap: 2%;
+    padding: 0 4px;
+}
+
+.svb-modal__button {
+    width: 49%;
+    font-size: 14px;
+}

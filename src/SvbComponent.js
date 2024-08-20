@@ -6,7 +6,7 @@ import SvbInput from './components/inputs/SvbInput';
 import SvbAttributesForm from './components/SvbAttributesForm';
 import FileUploader from './components/FileUploader';
 import PageAlert from './components/PageAlert';
-import SvbFormatter from './utils/SvbFormatter';
+import SvbModal from './components/SvbModal';
 
 class SvbComponent {
     static customComponent (tag, descriptor, id) {
@@ -62,6 +62,18 @@ class SvbComponent {
         pageAlert.showError(icon, title, desc, buttons);
 
         return pageAlert.component;
+    }
+
+    static modal (title, content, workspace) {
+        const modal = new SvbModal(title, 'normal', content, workspace);
+
+        return modal;
+    }
+
+    static bottomConfirm (title, content, workspace) {
+        const modal = new SvbModal(title, 'bottom', content, workspace);
+
+        return modal;
     }
 }
 

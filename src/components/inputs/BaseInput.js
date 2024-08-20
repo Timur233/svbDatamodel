@@ -268,10 +268,6 @@ class BaseInput extends SvbElement {
         this.component.appendChild(this.input);
         this.renderSlots();
 
-        if (this.fragment) {
-            this.component.appendChild(this.fragment);
-        }
-
         return this.component;
     }
 }

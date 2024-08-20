@@ -178,7 +178,8 @@ class PageAlert extends SvbElement {
 
     renderButtons () {
         this.state.buttons.forEach((b) => {
-            const button = SvbElement.create('button', null, 'btn btn--size-m btn--gray', b.title);
+            const button = SvbElement
+                .create('button', null, `btn ${b?.classList ? b.classList : 'btn--gray'}`, b.title);
 
             button.addEventListener('click', b.callback.bind(this.component));
             this.buttons.appendChild(button);
@@ -196,7 +197,7 @@ class PageAlert extends SvbElement {
         this.component.appendChild(this.wrapper);
 
         if (this.state.buttons.length > 0) {
-            this.wrapper.appendChild(this.buttons);
+            this.component.appendChild(this.buttons);
         }
     }
 }

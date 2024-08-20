@@ -9,6 +9,8 @@ class SvbInputCatalog extends BaseInput {
         this.state.tempValue = '';
         this.state.filters = viewSetting?.filters || null;
 
+        this.searchHandling = viewSetting?.searchHandling || undefined;
+
         this.init();
     }
 
@@ -17,7 +19,6 @@ class SvbInputCatalog extends BaseInput {
         this.loader = null;
 
         this.component.setFilters = this.setFilters.bind(this);
-        this.searchHandling = () => {};
         this.eventChange = (event) => {
             const customEvent = new CustomEvent('svb:change', {
                 bubbles:    true,
@@ -74,8 +75,11 @@ class SvbInputCatalog extends BaseInput {
                 event
             });
 
-            this.inputMethod(event);
-            this.state.tempValue = '';
+            if (this.settings.readOnly === false) {
+                this.inputMethod(event);
+                this.state.tempValue = '';
+            }
+
             this.component.dispatchEvent(customEvent);
 
             return false;
@@ -114,6 +118,9 @@ class SvbInputCatalog extends BaseInput {
                 additionalInfo: item
             })));
             this.hideLoader();
+
+            if (this.fragment !== null) { this.component.appendChild(this.fragment); }
+
             this.fragment.utilityObject.showDropdown();
         })(this._typeObjectName, this._typeObject, this.state.tempValue, this.state.filters);
 
@@ -172,7 +179,7 @@ class SvbInputCatalog extends BaseInput {
                 this.eventSelectDropdown();
                 this.eventChange();
 
-                this.input.focus();
+                this.input.blur();
                 this.fragment.utilityObject.hideDropdown();
             };
 
