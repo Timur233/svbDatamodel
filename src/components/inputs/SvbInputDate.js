@@ -10,6 +10,7 @@ class SvbInputDate extends BaseInput {
 
         this.state.formattedData = SvbFormatter.date('2024-12-12');
         this.state.type = 'timestamp';
+        this.state.startDate = viewSetting?.startDate || null;
 
         this.init();
         this.render();
@@ -32,6 +33,7 @@ class SvbInputDate extends BaseInput {
 
             this.input.blur();
             this.datepicker.utilityObject.setDate(this.state.date);
+            this.datepicker.utilityObject.renderCalendar();
             this.fragment.show();
         });
     }
@@ -79,6 +81,14 @@ class SvbInputDate extends BaseInput {
         return this.state.date;
     }
 
+    setStartDate (date) {
+        if (date) {
+            this.state.date = null;
+            this.state.value = null;
+            this.datepicker.utilityObject.setStartDate(date);
+        }
+    }
+
     activate (isFocus = true) {
         if (this.state.settings.readOnly === true) return;
 
@@ -106,7 +116,8 @@ class SvbInputDate extends BaseInput {
             this.datepicker = new SvbDatepicker({
                 date:       this.state.date,
                 classList:  'svb-input__datepicker',
-                timepicker: this.state.type === 'timestamp'
+                timepicker: this.state.type === 'timestamp',
+                startDate:  this.state.startDate
             });
 
             this.fragment = new SvbModal(this.state.date, 'bottom', this.datepicker).component;

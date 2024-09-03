@@ -214,6 +214,11 @@ async function renderForm (DM, contentBlock, saveCallback) {
         }
     });
 
+    DM.watch('startdate', (value) => {
+        svbForm.getAttribute('finihdate').getInstance().setStartDate(value);
+        svbForm.getAttribute('finihdate').setValue(value);
+    });
+
     contentBlock.appendChild(title);
     contentBlock.appendChild(fileUploader);
     contentBlock.appendChild(svbForm);
@@ -253,8 +258,8 @@ async function initPage () {
                 concretepump: DM.model.concretepump.v,
                 autonumber:   DM.model.autonumber,
                 supplier:     DM.model.supplier.v,
-                startdate:    SvbFormatter.sqlDate(DM.model.startdate),
-                finihdate:    SvbFormatter.sqlDate(DM.model.finihdate),
+                startdate:    SvbFormatter.sqlTimestamp(DM.model.startdate),
+                finihdate:    SvbFormatter.sqlTimestamp(DM.model.finihdate),
                 scan:         window.fileUploader.getValue(),
 
                 draft: false

@@ -1,5 +1,6 @@
 import BaseInput from './BaseInput';
-import SvbInputCatalog from './SvbInputCatalog';
+// import SvbInputCatalog from './SvbInputCatalog';
+import SvbInputCatalogHOC from './SvbInputCatalogHOC';
 import SvbInputDate from './SvbInputDate';
 
 class SvbInput {
@@ -18,7 +19,9 @@ class SvbInput {
             case 'system':
             case 'document':
             case 'doctable':
-                return new SvbInputCatalog(this.settings, this.classList);
+                return new SvbInputCatalogHOC(this.settings, this.classList);
+
+                // return new SvbInputCatalog(this.settings, this.classList);
             case 'datetime-local':
                 return new SvbInputDate(this.settings, this.classList);
             default:

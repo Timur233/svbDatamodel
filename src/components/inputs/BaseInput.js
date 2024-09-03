@@ -146,7 +146,7 @@ class BaseInput extends SvbElement {
 
             this.input.value = this.state.value;
         } else {
-            this.state.value = value;
+            this.state.value = Number(value);
             this.state.represent = String(value || '');
 
             this.input.value = this.state.value;
@@ -223,6 +223,10 @@ class BaseInput extends SvbElement {
         this.input.value = this.state.value;
         this.input.classList.add('svb-input__text');
         this.input.placeholder = this.settings.placeholder || 'Введите текст';
+
+        if (this.type === 'number') {
+            this.input.setAttribute('inputmode', 'decimal');
+        }
 
         if (!this.settings.multiline) {
             this.input.type = this.type;

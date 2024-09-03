@@ -10,10 +10,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function renderForm (DM, contentBlock, saveCallback) {
     const pageTitle = DM.vm.custom({
-        descriptor: 'pageTitle',
+        descriptor: 'pagetitle',
         render:     () => {
             return `
                 <span class="page-title">${DM.model.pagetitle}</span>
+            `;
+        }
+    });
+    const infoBlock = DM.vm.custom({
+        descriptor: 'reqisitionData',
+        render:     (value) => {
+            return `
+                <span class="page-info">${DM.model.reqisitionData}</span>
             `;
         }
     });
@@ -83,7 +91,8 @@ async function renderForm (DM, contentBlock, saveCallback) {
                 label:      'Остаток',
                 descriptor: 'remains',
                 settings:   {
-                    required:    true,
+                    required:    false,
+                    hidden:      true,
                     type:        'number',
                     placeholder: '0',
                     slots:       [{
@@ -120,7 +129,7 @@ async function renderForm (DM, contentBlock, saveCallback) {
         DM.model.greenscan = fileUploader.getValue();
 
         if (svbForm.validate() && DM.model.greenscan.length > 0) {
-            SvbComponent.pageError('Внимание!', 'Данное действие нельзя будет отменить', [{
+            SvbComponent.pageError('Внимание!', 'Данное действие нельзя будет изменить', [{
                 title:     'Отменить',
                 classList: 'btn--outline',
                 callback:  function () { this.close(); }
@@ -130,7 +139,20 @@ async function renderForm (DM, contentBlock, saveCallback) {
                 callback:  async function () {
                     await saveCallback();
                 }
-            }]);
+            }], `
+                <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M22.1749 40.3461C32.2319 22.5505 37.2604 13.6527 44.1607 11.3623C47.9566 10.1022 
+                    52.0457 10.1022 55.8416 11.3623C62.742 13.6527 67.7703 22.5505 77.8274 40.3461C87.8845 
+                    58.1415 92.9128 67.0394 91.4045 74.2894C90.5745 78.2782 88.5299 81.8957 85.5637 84.6244C80.172 
+                    89.584 70.1153 89.584 50.0012 89.584C29.8872 89.584 19.8302 89.584 14.4385 84.6244C11.4723 
+                    81.8957 9.42778 78.2782 8.5979 74.2894C7.08945 67.0394 12.1179 58.1415 22.1749 40.3461Z" 
+                    stroke="#F38B01" stroke-width="6"/>
+                    <path d="M49.9663 66.6672H50.0038" stroke="#F38B01" stroke-width="6" stroke-linecap="round" 
+                    stroke-linejoin="round"/>
+                    <path d="M50 54.1668V37.5" stroke="#F38B01" stroke-width="6" stroke-linecap="round" 
+                    stroke-linejoin="round"/>
+                </svg>
+            `);
         } else {
             if (DM.model.greenscan.length === 0) {
                 SvbComponent.pageError('Внимание', 'Нужно прикрепить фото зеленки', [{
@@ -165,6 +187,7 @@ async function renderForm (DM, contentBlock, saveCallback) {
     window.fileUploader = fileUploader;
 
     contentBlock.appendChild(pageTitle);
+    contentBlock.appendChild(infoBlock);
     contentBlock.appendChild(fileUploader);
     contentBlock.appendChild(svbForm);
     contentBlock.appendChild(summary);
@@ -175,6 +198,12 @@ async function renderForm (DM, contentBlock, saveCallback) {
             font-size: 18px;
             font-weight: 500;
             margin-bottom: 16px;
+        }
+
+        .page-info {
+            line-height: 1.4;
+            color: rgba(55, 65, 81, 1);
+            font-size: 15px;
         }
     `));
 
@@ -194,7 +223,7 @@ async function initPage () {
         contractor:          null,
         axes:                null,
         acceptedquantity:    null,
-        remains:             null,
+        remains:             0,
         author:              { r: userData.represent, v: userData.uuid },
         staffer:             { r: userData.userSettings.employee.r, v: userData.userSettings.employee.v }
     }, 'doc', 'concreterequisitionreceipts');
@@ -209,6 +238,7 @@ async function initPage () {
         window.form = await renderForm(DM, contentBlock, async () => {
             return await updateAction(requisitionUuid, {
                 acceptor:         DM.model.staffer.v,
+                actualsupplier:   DM.model.contractor.v,
                 acceptanceonly:   false,
                 accepted:         true,
                 acceptancedate:   SvbFormatter.sqlTimestamp(DM.model.acceptancedate),
@@ -234,6 +264,11 @@ async function initPage () {
         if (requisitionUuid) {
             const requisition = await getRequsition(requisitionUuid);
 
+            DM.model.docnumber = requisition.attr.docnumber;
+            DM.model.pagetitle = `Заявка RT - №${DM.model.docnumber}`;
+            DM.model.reqisitionData = `${requisition.attr.mainproject.r} / ${requisition.attr.project.r}
+             / ${requisition.attr.floor} этаж / ${requisition.attr.concrete.r}
+             / ${Number(requisition.attr.quantity)}м<sup>2</sup>`;
             DM.model.concreterequisition = { r: requisition.attr.represent, v: requisition.attr.uuid };
             DM.model.contractor = { r: requisition.attr.supplier.r, v: requisition.attr.supplier.v };
             DM.model.greenscan = requisition.attr.greenscan;
@@ -242,12 +277,8 @@ async function initPage () {
             DM.model.remains = requisition.attr.remains;
 
             window.form.disable('concreterequisition');
-            window.form.disable('contractor');
 
-            if (!DM.model.contractor?.v || !DM.model.supplierconcrete?.v || !DM.model.price) {
-                // window.form.disable();
-                // document.querySelector('.app-form__buttons-group > .btn--primary').remove();
-            }
+            window.fileUploader.setValue(DM.model.greenscan);
         }
 
         window.preloader.remove();

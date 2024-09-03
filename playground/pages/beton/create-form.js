@@ -260,6 +260,7 @@ async function renderForm (DM, contentBlock, saveCallback) {
                 settings:   {
                     required:    true,
                     type:        'datetime-local',
+                    startDate:   new Date(),
                     placeholder: SvbFormatter.timestamp(new Date())
                 }
             },
@@ -477,12 +478,7 @@ async function initPage () {
         const concrete = await api.instance('catalog', 'nomenclature', request.instance.concrete.v);
         const instanceData = request.instance;
         const concreteData = concrete.instance;
-        const concreteCodeArray = concreteData.code.split('_').reverse();
-        const concreteMark = concreteCodeArray[0] === 'sulfateresistant' ||
-            concreteCodeArray[0] === 'hydrophobic' ||
-            concreteCodeArray[0] === 'antifreeze'
-            ? concreteCodeArray[0]
-            : '';
+        const concreteCode = codeParser(concreteData.code);
 
         await renderForm(DM, contentBlock, async () => {
             return await api.update('document', 'concreterequisitions', DM.model.uuid, {
@@ -513,8 +509,6 @@ async function initPage () {
                 });
         });
 
-        console.log(concreteCodeArray[0]);
-
         DM.model.pageTitle = `Заявка на бетон №${instanceData.docnumber} от ${
             SvbFormatter.date(instanceData.insertdate)}`;
         DM.model.uuid = instanceData.uuid;
@@ -528,20 +522,31 @@ async function initPage () {
         DM.model.concretepump = instanceData.concretepump;
         DM.model.measure = concreteData.measure;
         DM.model.concrete = instanceData.concrete;
-        DM.model.concrete_mark = { r: concreteData.represent, v: concreteData.code };
-        DM.model.concrete_param = concreteCodeArray[0] === 'sulfateresistant' ||
-            concreteCodeArray[0] === 'hydrophobic' ||
-            concreteCodeArray[0] === 'antifreeze'
-            ? concreteCodeArray[0]
-            : '';
+        DM.model.concrete_mark = { r: concreteData.represent, v: concreteCode.mark };
+        DM.model.concrete_param = concreteCode.param;
         DM.model.supplier = instanceData.supplier;
         DM.model.comment = instanceData.comment;
-        DM.model.docdate = new Date(instanceData.purchasedate || null)?.toISOString()?.slice(0, 16);
-        DM.model.createDate = new Date(instanceData.insertdate || null)?.toISOString()?.slice(0, 16);
+        DM.model.docdate = instanceData.purchasedate;
+        DM.model.createDate = instanceData.insertdate;
         DM.model.author = instanceData.inserter;
 
         window.preloader.remove();
     }
+}
+
+function codeParser (code) {
+    const concreteCodeArray = code.split('_').reverse();
+    const concreteParam = concreteCodeArray[0] === 'sulfateresistant' ||
+        concreteCodeArray[0] === 'hydrophobic' ||
+        concreteCodeArray[0] === 'antifreeze'
+        ? concreteCodeArray[0]
+        : '';
+    const concreteMark = code.replace('_' + concreteParam, '');
+
+    return {
+        mark:  concreteMark,
+        param: concreteParam
+    };
 }
 
 function getInstanceUuid () {

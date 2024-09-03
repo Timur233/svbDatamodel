@@ -96,6 +96,8 @@ class SvbAttributesForm extends SvbElement {
 
             if (attribute?.label !== undefined) { wrapper.appendChild(label); }
 
+            if (attribute?.settings.hidden === true) { wrapper.addStyles({ display: 'none' }); }
+
             attribute.show = () => { wrapper.addStyles({ display: '' }); };
             attribute.hide = () => { wrapper.addStyles({ display: 'none' }); };
 

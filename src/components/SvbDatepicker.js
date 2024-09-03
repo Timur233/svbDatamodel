@@ -30,9 +30,18 @@ class SvbDatepicker extends SvbElement {
             }
         };
 
+        if (options?.startDate && new Date(options.startDate)) {
+            this.setStartDate(options.startDate);
+        }
+
         this.init();
 
         return this.render();
+    }
+
+    setStartDate (startDate) {
+        this.state.startDate = new Date(startDate);
+        this.state.startDate = new Date(this.state.startDate.setDate(this.state.startDate.getDate() - 1));
     }
 
     init () {
@@ -147,7 +156,7 @@ class SvbDatepicker extends SvbElement {
                 year:  date.getFullYear()
             };
 
-            this.renderCalendar();
+            // this.renderCalendar();
         }
     }
 
@@ -199,11 +208,14 @@ class SvbDatepicker extends SvbElement {
         this.component.classList.add('svbDatepicker--show');
 
         if (this.state.showTimepicker) this.renderTimepicker();
+
+        this.renderCalendar();
     }
 
     defaultEvents () {
         this.event('click', this.calendar, (event) => {
-            if (event.target.classList.contains('svbCalendar-grid__day')) {
+            if (event.target.classList.contains('svbCalendar-grid__day') &&
+            !event.target.classList.contains('svbCalendar-grid__day--disable')) {
                 const day = event.target.dayObj;
 
                 this.selectDay(
@@ -348,6 +360,20 @@ class SvbDatepicker extends SvbElement {
             week.forEach((processed, index) => {
                 const dayCell = SvbElement.create('div', null, 'svbCalendar-grid__cell');
                 const dayBtn  = SvbElement.create('button', null, 'svbCalendar-grid__day');
+                const check = () => {
+                    if (this.state?.startDate) {
+                        const currentDate = new Date(`${processed.year}-${String(processed.month + 1).padStart(2, '0')
+                            }-${String(processed.day).padStart(2, '0')}`);
+
+                        if (currentDate > this.state.startDate) {
+                            return true;
+                        }
+
+                        return false;
+                    }
+
+                    return true;
+                };
 
                 if (!processed.current) dayBtn.classList.add('svbCalendar-grid__day--gray');
 
@@ -359,13 +385,19 @@ class SvbDatepicker extends SvbElement {
 
                 if (processed.day === this.state.selected.day &&
                     processed.month === this.state.selected.month &&
-                    processed.year === this.state.selected.year) {
+                    processed.year === this.state.selected.year &&
+                    check()) {
                     dayBtn.classList.remove('svbCalendar-grid__day--current');
                     dayBtn.classList.add('svbCalendar-grid__day--selected');
                 }
 
                 if (index === 5 || index === 6) {
                     dayBtn.classList.add('svbCalendar-grid__day--holiday');
+                }
+
+                if (!check()) {
+                    dayBtn.classList.remove('svbCalendar-grid__day--current');
+                    dayBtn.classList.add('svbCalendar-grid__day--disable');
                 }
 
                 dayBtn.textContent = processed.day;

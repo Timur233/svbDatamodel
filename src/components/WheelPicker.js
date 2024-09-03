@@ -44,7 +44,6 @@ class WheelPicker extends SvbElement {
 
     addEvents (wheelData) {
         wheelData.wrapper.addEventListener('touchstart', (e) => {
-            e.stopPropagation();
             e.preventDefault();
 
             wheelData.startY = e.touches[0].clientY;
@@ -53,7 +52,6 @@ class WheelPicker extends SvbElement {
         });
 
         wheelData.wrapper.addEventListener('touchmove', (e) => {
-            e.stopPropagation();
             e.preventDefault();
 
             const touchY = e.touches[0].clientY;
@@ -86,7 +84,6 @@ class WheelPicker extends SvbElement {
         });
 
         wheelData.wrapper.addEventListener('touchend', (e) => {
-            e.stopPropagation();
             e.preventDefault();
 
             const itemOffset = Math.round(wheelData.currentTranslateY / this.heightItem);
@@ -116,7 +113,7 @@ class WheelPicker extends SvbElement {
             elements.forEach((element, index) => {
                 const item = SvbElement.create('div', null,
                     `picker-wrapper__item picker-item ${index === 0 ? 'picker-item--active' : ''}`,
-                    `<span>${element}</span>`);
+                    `<span>${String(element).padStart(2, '0')}</span>`);
 
                 wrapper.appendChild(item);
             });
