@@ -426,6 +426,10 @@ async function renderForm (DM, contentBlock, saveCallback) {
     fileUploader.getInstance()
         .removeMethod = filesActions().remove.bind(fileUploader.getInstance());
 
+    fileUploader.getInstance().cameraButtonClick = () => {
+        flutterMessages().openCamera();
+    };
+
     contentBlock.appendChild(title);
     contentBlock.appendChild(fileUploader);
     contentBlock.appendChild(svbForm);
@@ -749,8 +753,32 @@ function filesActions () {
     };
 }
 
+function base64ToFile (base64String, fileName) {
+    const arr = base64String.split(',');
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+
+    while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+    }
+
+    return new File([u8arr], fileName, { type: mime });
+}
+
 function flutterMessages () {
     return {
+        openCamera: () => {
+            try {
+                window.flutter_inappwebview.callHandler('camera', '');
+            } catch (error) { console.log(error); }
+        },
+        uploadPhoto: (file, name) => {
+            if (file) {
+                window.fileUploader.getInstance().loadFile(base64ToFile(file, name));
+            }
+        },
         success: (message) => {
             try {
                 window.flutter_inappwebview.callHandler('success', message);

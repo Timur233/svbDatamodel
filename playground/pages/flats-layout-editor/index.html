@@ -1,0 +1,156 @@
+
+<!DOCTYPE html>
+<html dir="ltr" lang="ru-ru">
+
+<head>
+    <title>
+        QS CRM
+    </title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline'; img-src * data:"/>
+    
+    <link href="./css/main.css" type="text/css" rel="stylesheet">
+    
+    <script src="./js/main.js"></script>
+
+    <link href="./css/fonts.css" type="text/css" rel="stylesheet">
+    <!--link href="/css/modalx.css" type="text/css" rel="stylesheet">
+    <link href="/css/settings.css" type="text/css" rel="stylesheet">
+
+    <script src="/js/modalx.js"></script-->
+
+	<link type="text/css" rel="stylesheet" href="./css/item_flatsLayoutEditor.css">
+	<link type="text/css" rel="stylesheet" href="./css/mod_menu.css">
+	<link type="text/css" rel="stylesheet" href="./css/mod_hello.css">
+                        
+	<script type="text/javascript" src="./js/svbdm.js" defer></script>
+	<script type="text/javascript" src="./js/svb.js" defer></script>
+	<script type="text/javascript" src="./js/svbutils.js" defer></script>
+	<script type="text/javascript" src="./js/svbmain.js" defer></script>
+	<script type="text/javascript" src="./js/item_flatsLayoutEditor.js" defer></script>
+	<script type="text/javascript" src="./js/mod_menu.js" defer></script>
+	<script type="text/javascript" src="./js/mod_hello.js" defer></script>
+                        
+	<script>
+		document.addEventListener("DOMContentLoaded", ready);
+		async function ready(e) {
+			try {
+				if (typeof main === 'function') await main(e);
+			} catch (e) {
+				console.error(e);
+			}
+			try {
+				if (typeof flatsLayoutEditor === 'function') await flatsLayoutEditor(e);
+			} catch (e) {
+				console.error(e);
+			}
+			try {
+				if (typeof menu === 'function') await menu();
+			} catch (e) {
+				console.error(e);
+			}
+			try {
+				if (typeof hello === 'function') await hello();
+			} catch (e) {
+				console.error(e);
+			}
+		}
+	</script>
+</head>
+
+<body>
+    <div id="wrapper" class="main-layout">
+        <div id="header" class="main-layout__header">
+            <div class="main-header">
+                <div class="main-header__logo">
+                    <a href="https://crm.qazaqstroy.kz">
+                        <img src="/img/logo.svg" class="main-logo">
+                    </a>
+                </div>
+                <div class="main-header__searchbar">
+                    <div class="main-searchbar" style="display: none;">
+                        <svg class="main-searchbar__icon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M10.9331 10.9333L13.3331 13.3334L10.9331 10.9333Z" fill="#9CA3AF"/>
+                            <path d="M10.9331 10.9333L13.3331 13.3334" stroke="#9CA3AF" stroke-width="1.2" 
+                            stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M12.2665 7.46663C12.2665 4.81566 10.1175 2.66663 7.46651 2.66663C4.81554 
+                            2.66663 2.6665 4.81566 2.6665 7.46663C2.6665 10.1176 4.81554 12.2666 7.46651 
+                            12.2666C10.1175 12.2666 12.2665 10.1176 12.2665 7.46663Z" stroke="#9CA3AF" 
+                            stroke-width="1.2" stroke-linejoin="round"/>
+                        </svg>
+                        <input class="main-searchbar__input" placeholder="Я ищу" type="text">
+                    </div>
+                </div>
+                <div class="main-header__menu">
+                    
+        <nav class="main-menu">
+            <ul class="main-menu__list">
+                <li class="main-menu__item main-menu__item--first-level ">
+                <a 
+                    class="main-menu__link " 
+                    href="https://crm.qazaqstroy.kz?item=flatsLayout"
+                >Шахматка</a></li><li class="main-menu__item main-menu__item--first-level ">
+                <a 
+                    class="main-menu__link " 
+                    href="https://crm.qazaqstroy.kz?item=flatsLayoutEditor"
+                >Редактор шахматки</a></li><li class="main-menu__item main-menu__item--first-level menu_has_childs">
+                <a 
+                    class="main-menu__link main-menu__link--has-child" 
+                    href="#"
+                >Тест</a><ul class="main-menu__submenu"><li class="main-menu__item main-menu__item--second-level" value=""><a class="main-menu__link" href="?item=test1">Тест 1</a></li><li class="main-menu__item main-menu__item--second-level" value=""><a class="main-menu__link" href="?item=test2">Тест 2</a></li></ul></li>
+            </ul>
+        </nav>
+                </div>
+                <div class="main-header__user-block main-user-block">
+                    <div class="main-user-block__statusbar main-statusbar" style="display: none;">
+                        <select class="main-statusbar__select main-statusbar__select--enable">
+                            <option value="1">Ативен</option>
+                        </select>
+                    </div>
+                    
+        <div class="main-user-block__user-info user-info">
+            <div class="user-info__avatar" style="display: none;">
+                <!--img src="./images/user-ava.png" class="user-info__avatar-image"-->
+            </div>
+            <div class="user-info__data">
+                <div class="user-info__name">Alexey</div>
+                <div class="user-info__position" style="display:none">Position</div>
+            </div>
+        </div>
+        <div class="main-user-block__more user-cabinet">
+            <button id="helloButton" class="user-cabinet__button">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5 6C5 5.44772 5.44772 5 6 5H9C9.55229 5 10 5.44772 10 6V9C10 
+                    9.55229 9.55229 10 9 10H6C5.44772 10 5 9.55229 5 9V6Z" fill="#4B5563"/>
+                    <path d="M5 15C5 14.4477 5.44772 14 6 14H9C9.55229 14 10 14.4477 10 15V18C10 
+                    18.5523 9.55229 19 9 19H6C5.44772 19 5 18.5523 5 18V15Z" fill="#4B5563"/>
+                    <path d="M15 5C14.4477 5 14 5.44772 14 6V9C14 9.55229 14.4477 10 15 
+                    10H18C18.5523 10 19 9.55229 19 9V6C19 5.44772 18.5523 5 18 5H15Z" fill="#4B5563"/>
+                    <path d="M14 15C14 14.4477 14.4477 14 15 14H18C18.5523 14 19 14.4477 19 
+                    15V18C19 18.5523 18.5523 19 18 19H15C14.4477 19 14 18.5523 14 18V15Z" fill="#4B5563"/>
+                </svg>
+            </button>
+        
+            <div id="helloMenu" class="hidden">
+                
+        <form method="post" action="https://crm.qazaqstroy.kz?item=signin">
+            <input type="hidden" name="login" value="1">
+            <input type="hidden" name="item" value="signin">
+            <input type="submit" value="Войти" class="qsButton">
+        </form> 
+            </div>
+        </div>
+    
+                </div>
+            </div>
+        </div>
+        <main class="main-layout__body">
+            <div id="contentBlocks" class="main-layout__content">
+                
+            </div>
+        </main>
+    </div>
+</body>
+
+</html>

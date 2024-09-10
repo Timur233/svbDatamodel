@@ -1,0 +1,13 @@
+
+#leftBar {
+    width: 250px;
+    float: left;
+}
+#flatsLayoutBlock {
+    width: 100%;
+    float: left;
+}
+#rightBar {
+    width: 250px;
+    float: right;
+}

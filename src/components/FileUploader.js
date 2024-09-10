@@ -95,9 +95,10 @@ class FileUploader extends SvbElement {
             if (this.component.classList.contains('svbUploader--hide-controll')) return;
 
             if (this.state.settings.readOnly === false) {
-                this.input.setAttribute('capture', 'camera');
-                this.input.click();
-                this.input.removeAttribute('capture');
+                // this.input.setAttribute('capture', 'camera');
+                // this.input.click();
+                // this.input.removeAttribute('capture');
+                this.cameraButtonClick();
             }
         });
 
@@ -139,8 +140,6 @@ class FileUploader extends SvbElement {
         this.eventChange()
             .then((res) => {})
             .catch();
-
-        console.log(this);
 
         this.loadMethod(file)
             .then((res) => {
