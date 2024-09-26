@@ -3,12 +3,14 @@ import '../../../scss/main.scss';
 import SvbElement from '../../../src/components/SvbElement.js';
 import SvbComponent from '../../../src/SvbComponent.js';
 import SvbFormatter from '../../../src/utils/SvbFormatter.js';
+import {SvbAPI} from "../../../src/services/SvbAPI";
 
 document.addEventListener('DOMContentLoaded', async () => {
     await initPage();
 });
 
 async function renderForm (DM, contentBlock, saveCallback) {
+    const api = new SvbAPI('https://cab.qazaqstroy.kz/', DM.model.session);
     const title = DM.vm.custom({
         descriptor: 'pageTitle',
         render:     () => {
@@ -375,12 +377,12 @@ async function renderForm (DM, contentBlock, saveCallback) {
         });
 
         if (storage?.v) {
-            getStorageData(storage.v)
+            api.instance('catalog', 'storages', storage.v)
                 .then((data) => {
-                    const { instance } = data.result.catalog.storages;
+                    const instance = data.instance;
                     const ourFirm = {
-                        r: instance.attr.ourfirm.r,
-                        v: instance.attr.ourfirm.v
+                        r: instance.ourfirm.r,
+                        v: instance.ourfirm.v
                     };
 
                     DM.model.ourfirm = ourFirm;
@@ -391,7 +393,7 @@ async function renderForm (DM, contentBlock, saveCallback) {
 
     function setConcreteNomenclature (codeA, codeB) {
         if (codeA && codeB !== null) {
-            getConcrete(`${codeA}${codeB !== '' ? '_' + codeB : ''}`)
+            getConcrete(`${codeA}${codeB !== '' ? '_' + codeB : ''}`, DM)
                 .then((rows) => {
                     if (rows.length > 0) {
                         const concrete = rows[0];
@@ -416,7 +418,7 @@ async function renderForm (DM, contentBlock, saveCallback) {
         const inputInstance = attr.input?.getInstance();
 
         if (inputInstance?.type === 'catalog' && inputInstance.searchHandling === undefined) {
-            inputInstance.searchHandling = catalogHelper;
+            inputInstance.searchHandling = api.catalogHelper;
         }
     });
 
@@ -442,7 +444,9 @@ async function initPage () {
     const session      = getCookie('session');
     const contentBlock = document.querySelector('#content-block');
     const userData     = await checkSession(session);
+    const api = new SvbAPI('https://cab.qazaqstroy.kz/', session);
     const DM           = new SvbModel({
+        session,
         pageTitle:      'Прием бетона без заявки',
         ourfirm:        null,
         mainproject:    null,
@@ -471,7 +475,7 @@ async function initPage () {
 
     if (docUuid === 'new') {
         await renderForm(DM, contentBlock, async () => {
-            return await insertAction({
+            return await api.insert('document', 'concreterequisitions', null, {
                 floor:        DM.model.floor,
                 docdate:      SvbFormatter.sqlDate(DM.model.createDate),
                 purchasedate: SvbFormatter.sqlTimestamp(DM.model.createDate),
@@ -500,15 +504,14 @@ async function initPage () {
 
                 writeoffitem: '132538d4-96dc-4b91-b3f7-d61b58d0226e',
                 draft:        false
+            }).then((res) => {
+                SvbComponent.pageSuccess('Сохранено', 'Прием бетона сохранен');
+                flutterMessages()
+                    .success({
+                        code: res.status,
+                        uuid: res?.result?.uuid
+                    });
             })
-                .then((res) => {
-                    SvbComponent.pageSuccess('Сохранено', 'Прием бетона сохранен');
-                    flutterMessages()
-                        .success({
-                            code: res.status,
-                            uuid: res?.result?.uuid
-                        });
-                })
                 .catch((e) => {
                     flutterMessages()
                         .error({ message: e });
@@ -549,170 +552,27 @@ async function checkSession (session) {
         .catch(e => e);
 }
 
-async function catalogHelper (typeObjectName, typeObject, search = '', filters = { static: [], user: [] }) {
-    const req = await fetch('https://cab.qazaqstroy.kz/svbapi', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({
-            session:    window.session,
-            type:       typeObject,
-            action:     'select',
-            reqoptions: {
-                name:     typeObjectName,
-                datatype: 'list',
-                lang:     'ru',
-                filters,
-                sort:     [],
-                limit:    10,
-                page:     1,
-                search
-            },
-            resoptions: {
-                metadata: false,
-                view:     false,
-                data:     true,
-                filters:  false,
-                sort:     true
-            }
-        })
-    }).then((res) => {
-        return res.json();
-    });
-
-    if (req.status === 200) {
-        const { columns, rows } = req.result[typeObject][typeObjectName].list;
-
-        return rows.map((row) => {
-            return columns.reduce((acc, curr, index) => {
-                acc[curr] = row[index];
-
-                return acc;
-            }, {});
-        });
-    }
-
-    return [];
-}
-
-async function getStorageData (uuid) {
-    return await fetch('https://cab.qazaqstroy.kz/svbapi', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({
-            session:    window.session,
-            type:       'catalog',
-            action:     'select',
-            reqoptions: {
-                name:     'storages',
-                datatype: 'instance',
-                instance: uuid,
-                lang:     'ru',
-                view:     null
-            },
-            resoptions: {
-                metadata:   true,
-                view:       true,
-                data:       true,
-                filters:    true,
-                sort:       true,
-                dataparams: {
-                    header: true
+async function getConcrete (code, DM) {
+    const api = new SvbAPI('https://cab.qazaqstroy.kz/', DM.model.session);
+    return await api.list('catalog', 'nomenclature', null, {
+        filters:  {
+            static: [
+                {
+                    preoperator:  'AND',
+                    attribute:    'code',
+                    filteralias:  'Код',
+                    predicate:    '=',
+                    value:        code,
+                    postoperator: '',
+                    represent:    code
                 }
-            }
-        })
+            ],
+            user: []
+        },
     })
-        .then(res => res.json())
-        .catch(e => e);
-}
-
-async function getConcrete (code) {
-    return await fetch('https://cab.qazaqstroy.kz/svbapi', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({
-            session:    window.session,
-            type:       'catalog',
-            action:     'select',
-            reqoptions: {
-                name:     'nomenclature',
-                datatype: 'list',
-                lang:     'ru',
-                filters:  {
-                    static: [
-                        {
-                            preoperator:  'AND',
-                            attribute:    'code',
-                            filteralias:  'Код',
-                            predicate:    '=',
-                            value:        code,
-                            postoperator: '',
-                            represent:    code
-                        }
-                    ],
-                    user: []
-                },
-                sort:             [],
-                limit:            25,
-                page:             1,
-                search:           '',
-                view:             null,
-                selectedInstance: null
-            },
-            resoptions: {
-                metadata: true,
-                view:     true,
-                data:     true,
-                filters:  true,
-                sort:     true,
-                tree:     false
-            }
-        })
-    })
-        .then(res => res.json())
         .then((res) => {
-            const columns = res?.result?.catalog?.nomenclature?.list?.columns || {};
-            const rows = res?.result?.catalog?.nomenclature?.list?.rows || [];
-
-            return rows.map((row) => {
-                return columns.reduce((acc, key, index) => {
-                    acc[key] = row[index];
-
-                    return acc;
-                }, {});
-            });
+            return res.rows;
         })
-        .catch(e => e);
-}
-
-async function insertAction (data) {
-    return await fetch('https://cab.qazaqstroy.kz/svbapi', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({
-            session:    window.session,
-            type:       'document',
-            action:     'insert',
-            reqoptions: {
-                datatype: 'instance',
-                instance: '',
-                name:     'concreterequisitions',
-                data:     {
-                    instance: data,
-                    tables:   {}
-                },
-                lang: 'ru'
-            },
-            resoptions: {
-                metadata:   false,
-                view:       false,
-                data:       true,
-                dataparams: {
-                    header: true
-                }
-            }
-        })
-    })
-        .then(res => res.json())
         .catch(e => e);
 }
 

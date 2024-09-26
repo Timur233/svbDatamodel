@@ -412,6 +412,22 @@ export class SvbAPI {
             });
     }
 
+    catalogHelper = async (typeObjectName, typeObject, search = '', filters = { static: [], user: [] }) => {
+        const req = await this.list(typeObject, typeObjectName, search, {
+            filters,
+            sort:  [],
+            limit: 10,
+            page:  1,
+            search
+        });
+
+        if (req.status === 200) {
+            return req.rows;
+        }
+
+        return [];
+    }
+
     /**
      *
      * @param {Object} tables response tables object
