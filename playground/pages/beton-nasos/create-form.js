@@ -3,12 +3,14 @@ import '../../../scss/main.scss';
 import SvbElement from '../../../src/components/SvbElement.js';
 import SvbComponent from '../../../src/SvbComponent.js';
 import SvbFormatter from '../../../src/utils/SvbFormatter.js';
+import {SvbAPI} from "../../../src/services/SvbAPI";
 
 document.addEventListener('DOMContentLoaded', async () => {
     await initPage();
 });
 
 async function renderForm (DM, contentBlock, saveCallback) {
+    const api = new SvbAPI('https://cab.qazaqstroy.kz/', DM.model.session);
     const title = DM.vm.custom({
         descriptor: 'pageTitle',
         render:     () => {
@@ -168,7 +170,7 @@ async function renderForm (DM, contentBlock, saveCallback) {
     svbForm.getInstance().state.attributes.forEach((attr) => {
         const inputInstance = attr.input.getInstance();
 
-        inputInstance.searchHandling = catalogHelper;
+        inputInstance.searchHandling = api.catalogHelper;
     });
 
     fileUploader.getInstance()
@@ -204,12 +206,12 @@ async function renderForm (DM, contentBlock, saveCallback) {
         });
 
         if (storage?.v) {
-            getStorageData(storage.v)
+            api.instance('catalog', 'storages', storage.v)
                 .then((data) => {
-                    const { instance } = data.result.catalog.storages;
+                    const instance = data.instance;
                     const ourFirm = {
-                        r: instance.attr.ourfirm.r,
-                        v: instance.attr.ourfirm.v
+                        r: instance.ourfirm.r,
+                        v: instance.ourfirm.v
                     };
 
                     DM.model.ourfirm = ourFirm;
@@ -235,7 +237,9 @@ async function initPage () {
     const session      = getCookie('session');
     const contentBlock = document.querySelector('#content-block');
     const userData     = await checkSession(session);
+    const api = new SvbAPI('https://cab.qazaqstroy.kz/', session);
     const DM           = new SvbModel({
+        session,
         pageTitle:    'Фиксация работы автобетононасоса',
         ourfirm:      null,
         mainproject:  null,
@@ -255,7 +259,7 @@ async function initPage () {
 
     if (docUuid === 'new') {
         await renderForm(DM, contentBlock, async () => {
-            return await insertAction({
+            return await api.insert('document', 'concretepumpjobs', null, {
                 ourfirm:      DM.model.ourfirm.v,
                 mainproject:  DM.model.mainproject.v,
                 project:      DM.model.project.v,
@@ -267,15 +271,14 @@ async function initPage () {
                 scan:         window.fileUploader.getValue(),
 
                 draft: false
+            }).then((res) => {
+                SvbComponent.pageSuccess('Сохранено', 'Прием бетона сохранен');
+                flutterMessages()
+                    .success({
+                        code: res.status,
+                        uuid: res?.result?.uuid
+                    });
             })
-                .then((res) => {
-                    SvbComponent.pageSuccess('Сохранено', 'Прием бетона сохранен');
-                    flutterMessages()
-                        .success({
-                            code: res.status,
-                            uuid: res?.result?.uuid
-                        });
-                })
                 .catch((e) => {
                     flutterMessages()
                         .error({ message: e });
@@ -284,11 +287,11 @@ async function initPage () {
 
         window.preloader.remove();
     } else {
-        const request = await getInstance(docUuid);
+        const request = await api.instance('document', 'concretepumpjobs', docUuid);
         const instanceData = request.result.document.concretepumpjobs.instance.attr;
 
         await renderForm(DM, contentBlock, async () => {
-            return await updateAction(DM.model.uuid, {
+            return await api.update('document', 'concretepumpjobs', DM.model.uuid, {
                 ourfirm:      DM.model.ourfirm.v,
                 mainproject:  DM.model.mainproject.v,
                 project:      DM.model.project.v,
@@ -298,19 +301,17 @@ async function initPage () {
                 startdate:    SvbFormatter.sqlDate(DM.model.startdate),
                 finihdate:    SvbFormatter.sqlDate(DM.model.finihdate),
                 scan:         window.fileUploader.getValue()
-            })
-                .then((res) => {
-                    SvbComponent.pageSuccess('Сохранено', 'Прием бетона сохранен');
-                    flutterMessages()
-                        .success({
-                            code: res.status,
-                            uuid: DM.model.uuid
-                        });
-                })
-                .catch((e) => {
-                    flutterMessages()
-                        .error({ message: e });
-                });
+            }).then((res) => {
+                SvbComponent.pageSuccess('Сохранено', 'Прием бетона сохранен');
+                flutterMessages()
+                    .success({
+                        code: res.status,
+                        uuid: DM.model.uuid
+                    });
+            }).catch((e) => {
+                flutterMessages()
+                    .error({ message: e });
+            });
         });
 
         DM.model.pageTitle = `Фиксация работы автобетононасоса №${instanceData.docnumber} от ${
@@ -365,82 +366,6 @@ async function checkSession (session) {
         .catch(e => e);
 }
 
-async function catalogHelper (typeObjectName, typeObject, search = '', filters = { static: [], user: [] }) {
-    const req = await fetch('https://cab.qazaqstroy.kz/svbapi', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({
-            session:    window.session,
-            type:       typeObject,
-            action:     'select',
-            reqoptions: {
-                name:     typeObjectName,
-                datatype: 'list',
-                lang:     'ru',
-                filters,
-                sort:     [],
-                limit:    10,
-                page:     1,
-                search
-            },
-            resoptions: {
-                metadata: false,
-                view:     false,
-                data:     true,
-                filters:  false,
-                sort:     true
-            }
-        })
-    }).then((res) => {
-        return res.json();
-    });
-
-    if (req.status === 200) {
-        const { columns, rows } = req.result[typeObject][typeObjectName].list;
-
-        return rows.map((row) => {
-            return columns.reduce((acc, curr, index) => {
-                acc[curr] = row[index];
-
-                return acc;
-            }, {});
-        });
-    }
-
-    return [];
-}
-
-async function getStorageData (uuid) {
-    return await fetch('https://cab.qazaqstroy.kz/svbapi', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({
-            session:    window.session,
-            type:       'catalog',
-            action:     'select',
-            reqoptions: {
-                name:     'storages',
-                datatype: 'instance',
-                instance: uuid,
-                lang:     'ru',
-                view:     null
-            },
-            resoptions: {
-                metadata:   true,
-                view:       true,
-                data:       true,
-                filters:    true,
-                sort:       true,
-                dataparams: {
-                    header: true
-                }
-            }
-        })
-    })
-        .then(res => res.json())
-        .catch(e => e);
-}
-
 function filesActions () {
     return {
         upload: async function (file) {
@@ -476,101 +401,6 @@ function filesActions () {
         },
         remove: async () => {}
     };
-}
-
-async function insertAction (data) {
-    return await fetch('https://cab.qazaqstroy.kz/svbapi', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({
-            session:    window.session,
-            type:       'document',
-            action:     'insert',
-            reqoptions: {
-                datatype: 'instance',
-                instance: '',
-                name:     'concretepumpjobs',
-                data:     {
-                    instance: data,
-                    tables:   {}
-                },
-                lang: 'ru'
-            },
-            resoptions: {
-                metadata:   false,
-                view:       false,
-                data:       true,
-                dataparams: {
-                    header: true
-                }
-            }
-        })
-    })
-        .then(res => res.json())
-        .catch(e => e);
-}
-
-async function updateAction (uuid, data) {
-    return await fetch('https://cab.qazaqstroy.kz/svbapi', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({
-            session:    window.session,
-            type:       'document',
-            action:     'update',
-            reqoptions: {
-                datatype: 'instance',
-                instance: uuid,
-                name:     'concretepumpjobs',
-                data:     {
-                    instance: data,
-                    tables:   {}
-                },
-                lang: 'ru'
-            },
-            resoptions: {
-                metadata:   false,
-                view:       false,
-                data:       true,
-                dataparams: {
-                    header: true
-                }
-            }
-        })
-    })
-        .then(res => res.json())
-        .catch(e => e);
-}
-
-async function getInstance (uuid) {
-    return await fetch('https://cab.qazaqstroy.kz/svbapi', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({
-            session:    window.session,
-            type:       'document',
-            action:     'select',
-            reqoptions: {
-                name:     'concretepumpjobs',
-                datatype: 'instance',
-                instance: uuid,
-                lang:     'ru',
-                view:     null
-            },
-            resoptions: {
-                metadata:   true,
-                view:       true,
-                data:       true,
-                filters:    true,
-                sort:       true,
-                dataparams: {
-                    header: true
-                }
-            }
-        })
-    })
-        .then(res => res.json())
-        .catch(e => e);
 }
 
 function base64ToFile (base64String, fileName) {

@@ -3,12 +3,14 @@ import '../../../scss/main.scss';
 import SvbElement from '../../../src/components/SvbElement.js';
 import SvbComponent from '../../../src/SvbComponent.js';
 import SvbFormatter from '../../../src/utils/SvbFormatter.js';
+import { SvbAPI } from '../../../src/services/SvbAPI';
 
 document.addEventListener('DOMContentLoaded', async () => {
     await initPage();
 });
 
 async function renderForm (DM, contentBlock, saveCallback) {
+    const api = new SvbAPI('https://cab.qazaqstroy.kz/', DM.model.session);
     const pageTitle = DM.vm.custom({
         descriptor: 'pagetitle',
         render:     () => {
@@ -175,7 +177,7 @@ async function renderForm (DM, contentBlock, saveCallback) {
     svbForm.getInstance().state.attributes.forEach((attr) => {
         const inputInstance = attr.input.getInstance();
 
-        inputInstance.searchHandling = catalogHelper;
+        inputInstance.searchHandling = api.catalogHelper;
     });
 
     fileUploader.getInstance()
@@ -219,7 +221,10 @@ async function initPage () {
     const session      = getCookie('session');
     const contentBlock = document.querySelector('#content-block');
     const userData     = await checkSession(session);
+    const api = new SvbAPI('https://cab.qazaqstroy.kz/', session);
+
     const DM           = new SvbModel({
+        session,
         pagetitle:           'Приемка',
         greenscan:           null,
         acceptancedate:      new Date(),
@@ -240,7 +245,7 @@ async function initPage () {
         const requisitionUuid = urlParams.get('uuid');
 
         window.form = await renderForm(DM, contentBlock, async () => {
-            return await updateAction(requisitionUuid, {
+            return await api.update('document', 'concreterequisitions', DM.model.uuid, {
                 acceptor:         DM.model.staffer.v,
                 actualsupplier:   DM.model.contractor.v,
                 acceptanceonly:   false,
@@ -250,35 +255,51 @@ async function initPage () {
                 axes:             DM.model.axes,
                 acceptedquantity: DM.model.acceptedquantity,
                 remains:          DM.model.remains
-            })
-                .then((res) => {
-                    SvbComponent.pageSuccess('Сохранено', 'Прием бетона сохранен');
-                    flutterMessages()
-                        .success({
-                            code: res.status,
-                            uuid: res?.result?.uuid
-                        });
-                })
-                .catch((e) => {
-                    flutterMessages()
-                        .error({ message: e });
-                });
+            }).then((res) => {
+                SvbComponent.pageSuccess('Сохранено', 'Прием бетона сохранен');
+                flutterMessages()
+                    .success({
+                        code: res.status,
+                        uuid: res?.result?.uuid
+                    });
+            }).catch((e) => {
+                flutterMessages()
+                    .error({ message: e });
+            });
         });
 
         if (requisitionUuid) {
-            const requisition = await getRequsition(requisitionUuid);
+            // const requisition = await api.instance('document', 'concreterequisitions', requisitionUuid);
+            const requisition = await api.instance('document', 'concreterequisitions', requisitionUuid).then(res => res.instance);
 
-            DM.model.docnumber = requisition.attr.docnumber;
+            console.log('requisition', requisition);
+
+            console.log('DM.model', DM.model);
+            console.log('window', window);
+
+            // DM.model.docnumber = requisition.docnumber;
+            // DM.model.pagetitle = `Заявка RT - №${DM.model.docnumber}`;
+            // DM.model.reqisitionData = `${requisition.attr.mainproject.r} / ${requisition.attr.project.r}
+            //  / ${requisition.attr.floor} этаж / ${requisition.attr.concrete.r}
+            //  / ${Number(requisition.attr.quantity)}м<sup>2</sup>`;
+            // DM.model.concreterequisition = { r: requisition.attr.represent, v: requisition.attr.uuid };
+            // DM.model.contractor = { r: requisition.attr.supplier.r, v: requisition.attr.supplier.v };
+            // DM.model.greenscan = requisition.attr.greenscan;
+            // DM.model.axes = requisition.attr.axes;
+            // DM.model.acceptedquantity = requisition.attr.acceptedquantity;
+            // DM.model.remains = requisition.attr.remains;
+
+            DM.model.docnumber = requisition.docnumber;
             DM.model.pagetitle = `Заявка RT - №${DM.model.docnumber}`;
-            DM.model.reqisitionData = `${requisition.attr.mainproject.r} / ${requisition.attr.project.r}
-             / ${requisition.attr.floor} этаж / ${requisition.attr.concrete.r}
-             / ${Number(requisition.attr.quantity)}м<sup>2</sup>`;
-            DM.model.concreterequisition = { r: requisition.attr.represent, v: requisition.attr.uuid };
-            DM.model.contractor = { r: requisition.attr.supplier.r, v: requisition.attr.supplier.v };
-            DM.model.greenscan = requisition.attr.greenscan;
-            DM.model.axes = requisition.attr.axes;
-            DM.model.acceptedquantity = requisition.attr.acceptedquantity;
-            DM.model.remains = requisition.attr.remains;
+            DM.model.reqisitionData = `${requisition.mainproject.r} / ${requisition.project.r}
+             / ${requisition.floor} этаж / ${requisition.concrete.r}
+             / ${Number(requisition.quantity)}м<sup>2</sup>`;
+            DM.model.concreterequisition = { r: requisition.represent, v: requisition.uuid };
+            DM.model.contractor = { r: requisition.supplier.r, v: requisition.supplier.v };
+            DM.model.greenscan = requisition.greenscan;
+            DM.model.axes = requisition.axes;
+            DM.model.acceptedquantity = requisition.acceptedquantity;
+            DM.model.remains = requisition.remains;
 
             window.form.disable('concreterequisition');
 
@@ -319,51 +340,6 @@ async function checkSession (session) {
         .catch(e => e);
 }
 
-async function catalogHelper (typeObjectName, typeObject, search = '', filters = { static: [], user: [] }) {
-    const req = await fetch('https://cab.qazaqstroy.kz/svbapi', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({
-            session:    window.session,
-            type:       typeObject,
-            action:     'select',
-            reqoptions: {
-                name:     typeObjectName,
-                datatype: 'list',
-                lang:     'ru',
-                filters,
-                sort:     [],
-                limit:    10,
-                page:     1,
-                search
-            },
-            resoptions: {
-                metadata: false,
-                view:     false,
-                data:     true,
-                filters:  false,
-                sort:     true
-            }
-        })
-    }).then((res) => {
-        return res.json();
-    });
-
-    if (req.status === 200) {
-        const { columns, rows } = req.result[typeObject][typeObjectName].list;
-
-        return rows.map((row) => {
-            return columns.reduce((acc, curr, index) => {
-                acc[curr] = row[index];
-
-                return acc;
-            }, {});
-        });
-    }
-
-    return [];
-}
-
 function filesActions () {
     return {
         upload: async function (file) {
@@ -399,67 +375,6 @@ function filesActions () {
         },
         remove: async () => {}
     };
-}
-
-async function updateAction (uuid, data) {
-    return await fetch('https://cab.qazaqstroy.kz/svbapi', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({
-            session:    window.session,
-            type:       'document',
-            action:     'update',
-            reqoptions: {
-                datatype: 'instance',
-                instance: uuid,
-                name:     'concreterequisitions',
-                data:     {
-                    instance: data,
-                    tables:   {}
-                },
-                lang: 'ru'
-            },
-            resoptions: {
-                metadata:   false,
-                view:       false,
-                data:       true,
-                dataparams: {
-                    header: true
-                }
-            }
-        })
-    })
-        .then(res => res.json())
-        .catch(e => e);
-}
-
-async function getRequsition (uuid) {
-    return await fetch('https://cab.qazaqstroy.kz/svbapi', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({
-            session:    window.session,
-            type:       'document',
-            action:     'select',
-            reqoptions: {
-                name:     'concreterequisitions',
-                datatype: 'instance',
-                instance: uuid,
-                lang:     'ru',
-                view:     null
-            },
-            resoptions: {
-                metadata: true,
-                view:     true,
-                data:     true,
-                filters:  true,
-                sort:     true
-            }
-        })
-    })
-        .then(res => res.json())
-        .then(res => res.result.document.concreterequisitions.instance)
-        .catch(e => e);
 }
 
 function base64ToFile (base64String, fileName) {

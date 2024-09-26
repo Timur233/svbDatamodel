@@ -397,7 +397,7 @@ async function renderForm (DM, contentBlock, saveCallback) {
         const inputInstance = attr.input?.getInstance();
 
         if (inputInstance?.type === 'catalog' && inputInstance.searchHandling === undefined) {
-            inputInstance.searchHandling = catalogHelper;
+            inputInstance.searchHandling = api.catalogHelper;
         }
     });
 
@@ -434,6 +434,7 @@ async function initPage () {
         author:         { r: userData.represent, v: userData.uuid }
     }, 'doc', 'concreterequisitions');
 
+    window.DM = DM;
     window.session = session;
     window.preloader = SvbComponent.pagePreloader('Загрузка', '');
 
@@ -577,23 +578,6 @@ async function checkSession (session) {
     })
         .then(res => res.json())
         .catch(e => e);
-}
-
-async function catalogHelper (typeObjectName, typeObject, search = '', filters = { static: [], user: [] }) {
-    const api = new SvbAPI('https://cab.qazaqstroy.kz/', '9adb6aab-43ef-429b-9a8a-0c3967d4228c');
-    const req = await api.list(typeObject, typeObjectName, search, {
-        filters,
-        sort:  [],
-        limit: 10,
-        page:  1,
-        search
-    });
-
-    if (req.status === 200) {
-        return req.rows;
-    }
-
-    return [];
 }
 
 function base64ToFile (base64String, fileName) {
