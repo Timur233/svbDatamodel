@@ -287,8 +287,7 @@ async function initPage () {
 
         window.preloader.remove();
     } else {
-        const request = await api.instance('document', 'concretepumpjobs', docUuid);
-        const instanceData = request.result.document.concretepumpjobs.instance.attr;
+        const instanceData = await api.instance('document', 'concretepumpjobs', docUuid).then(res => res.instance);
 
         await renderForm(DM, contentBlock, async () => {
             return await api.update('document', 'concretepumpjobs', DM.model.uuid, {
@@ -327,7 +326,7 @@ async function initPage () {
         DM.model.supplier = instanceData.supplier;
 
         DM.model.startdate = new Date(instanceData.startdate || null)?.toISOString()?.slice(0, 16);
-        DM.model.finihdate = new Date(instanceData.infinihdatesertdate || null)?.toISOString()?.slice(0, 16);
+        DM.model.finihdate = instanceData.finihdate;
         DM.model.createDate = new Date(instanceData.insertdate).toISOString().slice(0, 16);
         DM.model.author = instanceData.inserter;
 
