@@ -288,27 +288,36 @@ async function renderForm (DM, contentBlock, saveCallback) {
     const saveButton = SvbElement.create('button', null, 'btn btn--primary', 'Сохранить');
 
     saveButton.addEventListener('click', async () => {
-        DM.model.scan = fileUploader.getValue();
+        const userData = await api.checkSession(session);
 
-        if (DM.model.observers.length === 0) {
-            SvbComponent.pageError('Внимание', 'Нужно указать наблюдателей', [{
+        if (userData.userSettings.employee.v === DM.model.author.v) {
+            DM.model.scan = fileUploader.getValue();
+
+            if (DM.model.observers.length === 0) {
+                SvbComponent.pageError('Внимание', 'Нужно указать наблюдателей', [{
+                    title:    'Закрыть',
+                    callback: function () { this.close(); }
+                }]);
+
+                return;
+            }
+
+            if (DM.model.items.length === 0) {
+                SvbComponent.pageError('Внимание', 'Нужно добавить задачи', [{
+                    title:    'Закрыть',
+                    callback: function () { this.close(); }
+                }]);
+
+                return;
+            }
+
+            await saveCallback();
+        } else {
+            SvbComponent.pageError('Внимание', 'Только автор может редактировать служебную записку', [{
                 title:    'Закрыть',
                 callback: function () { this.close(); }
             }]);
-
-            return;
         }
-
-        if (DM.model.items.length === 0) {
-            SvbComponent.pageError('Внимание', 'Нужно добавить задачи', [{
-                title:    'Закрыть',
-                callback: function () { this.close(); }
-            }]);
-
-            return;
-        }
-
-        await saveCallback();
     });
 
     buttonsGroup.appendChild(saveButton);
@@ -602,6 +611,8 @@ async function initPage (docUuid, session) {
 
         if (window.fileUploader)
             window.fileUploader.setValue(DM.model.scan);
+
+
 
         window.preloader.remove();
     }
