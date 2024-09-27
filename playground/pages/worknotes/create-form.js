@@ -4,6 +4,8 @@ import SvbElement from '../../../src/components/SvbElement.js';
 import SvbComponent from '../../../src/SvbComponent.js';
 import SvbFormatter from '../../../src/utils/SvbFormatter.js';
 import { SvbAPI } from '../../../src/services/SvbAPI.js';
+import {FlutterMessages} from '../../../src/utils/FlutterMessages.js';
+import {getInstanceUuid, getCookie} from '../../../src/utilities.js';
 
 const docUuid      = getInstanceUuid();
 const session      = getCookie('session');
@@ -367,7 +369,7 @@ async function renderForm (DM, contentBlock, saveCallback) {
         .removeMethod = api.fs.remove.bind(api.fs);
 
     fileUploader.getInstance().cameraButtonClick = () => {
-        flutterMessages().openCamera();
+        FlutterMessages.openCamera();
     };
 
     window.fileUploader = fileUploader;
@@ -491,15 +493,13 @@ async function initPage (docUuid, session) {
             })
                 .then((res) => {
                     SvbComponent.pageSuccess('Сохранено', 'Служебная записка сохранена');
-                    flutterMessages()
-                        .success({
-                            code: res.status,
-                            uuid: res?.result?.uuid
-                        });
+                    FlutterMessages.success({
+                        code: res.status,
+                        uuid: res?.result?.uuid
+                    });
                 })
                 .catch((e) => {
-                    flutterMessages()
-                        .error({ message: e });
+                    FlutterMessages.error({ message: e });
                 });
         });
 
@@ -584,14 +584,12 @@ async function initPage (docUuid, session) {
                 }
             ).then((res) => {
                 SvbComponent.pageSuccess('Сохранено', 'Служебная записка сохранена');
-                flutterMessages()
-                    .success({
-                        code: res.status,
-                        uuid: res?.result?.uuid
-                    });
+                FlutterMessages.success({
+                    code: res.status,
+                    uuid: res?.result?.uuid
+                });
             }).catch((e) => {
-                flutterMessages()
-                    .error({ message: e });
+                FlutterMessages.error({ message: e });
             });
         });
 
@@ -616,58 +614,4 @@ async function initPage (docUuid, session) {
 
         window.preloader.remove();
     }
-}
-
-function getInstanceUuid () {
-    return window.svbReqOptions.uuid;
-}
-
-function getCookie (name) {
-    const cookies = document.cookie;
-    const match = cookies.match(new RegExp('(^| )' + name + '=([^;]+)'));
-
-    if (match) {
-        return decodeURIComponent(match[2]);
-    } else {
-        return null;
-    }
-}
-
-function base64ToFile (base64String, fileName) {
-    const arr = base64String.split(',');
-    const mime = arr[0].match(/:(.*?);/)[1];
-    const bstr = atob(arr[1]);
-    let n = bstr.length;
-    const u8arr = new Uint8Array(n);
-
-    while (n--) {
-        u8arr[n] = bstr.charCodeAt(n);
-    }
-
-    return new File([u8arr], fileName, { type: mime });
-}
-
-function flutterMessages () {
-    return {
-        openCamera: () => {
-            try {
-                window.flutter_inappwebview.callHandler('camera', '');
-            } catch (error) { console.log(error); }
-        },
-        uploadPhoto: (file, name) => {
-            if (file) {
-                window.fileUploader.getInstance().loadFile(base64ToFile(file, name));
-            }
-        },
-        success: (message) => {
-            try {
-                window.flutter_inappwebview.callHandler('success', message);
-            } catch (error) { console.log(error); }
-        },
-        error: (message) => {
-            try {
-                window.flutter_inappwebview.callHandler('error', message);
-            } catch (error) { console.log(error); }
-        }
-    };
 }
