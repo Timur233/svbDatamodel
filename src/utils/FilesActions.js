@@ -1,5 +1,5 @@
 export class FilesActions {
-    async static upload (file) {
+    static async upload (file) {
         const formData = new FormData();
 
         formData.append('file', file);
@@ -16,7 +16,7 @@ export class FilesActions {
             }));
     };
 
-    async static preview (uuid) {
+    static async preview (uuid) {
         const response = await fetch('https://cab.qazaqstroy.kz/files/download', {
             method: 'POST',
             body:   JSON.stringify({ url: uuid })
@@ -32,5 +32,5 @@ export class FilesActions {
         return base64data;
     };
 
-    async static remove () {};
+    static async remove () {};
 }
