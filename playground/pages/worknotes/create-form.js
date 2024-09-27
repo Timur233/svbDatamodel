@@ -25,7 +25,7 @@ function recalculateItemsId (DM) {
     });
 }
 
-function showAddTaskModal (DM, id = null) {
+function showAddTaskModal (DM, id = null, taskData = null) {
     const modal = DM.vm.modal(`Задача №${id || DM.model.items.length + 1}`);
     const modalForm = DM.vm.form({
         attributes: [
@@ -61,7 +61,7 @@ function showAddTaskModal (DM, id = null) {
         ]
     });
     const saveButton = SvbElement.create('button', null, 'btn btn--primary', id === null ? 'Создать' : 'Сохранить');
-    const activeTask = DM.model.items.find(i => i.id === id);
+    const activeTask = taskData || DM.model.items.find(i => i.id === id);
 
     DM.model.addTask.id = activeTask?.id || DM.model.items.length + 1;
     DM.model.addTask.comment = activeTask?.comment || '';
@@ -144,6 +144,8 @@ async function renderForm (DM, contentBlock, saveCallback) {
                         deleteButton.dataset.uuid = observer.v;
                         deleteButton.addEventListener('click', () => {
                             DM.model.observers = DM.model.observers.filter(i => i.v !== deleteButton.dataset.uuid);
+                            if (observer.hasOwnProperty('uuid'))
+                                DM.model.deletedObservers.push(observer);
                         });
                         observerActions.appendChild(deleteButton);
 
@@ -215,13 +217,15 @@ async function renderForm (DM, contentBlock, saveCallback) {
                         deleteButton.dataset.id = task.id;
                         deleteButton.addEventListener('click', () => {
                             DM.model.items = DM.model.items.filter(i => i.id !== Number(deleteButton.dataset.id));
+                            if (task.hasOwnProperty('uuid') && !!task.uuid)
+                                DM.model.deletedItems.push(task.uuid);
 
                             recalculateItemsId(DM);
                         });
 
                         editButton.dataset.id = task.id;
                         editButton.addEventListener('click', () => {
-                            showAddTaskModal(DM, Number(editButton.dataset.id));
+                            showAddTaskModal(DM, Number(editButton.dataset.id), task);
                         });
 
                         taskActions.appendChild(deleteButton);
@@ -434,12 +438,14 @@ async function initPage (docUuid, session) {
         session,
         pageTitle:      'Служебная записка',
         observers:      [],
+        deletedObservers: [],
         items:          [],
+        deletedItems:   [],
         selectObserver: {},
         addTask:        {},
         docdate:        new Date(),
         author:         { r: userData.userSettings.employee.r, v: userData.userSettings.employee.v }
-    }, 'doc', 'concreterequisitions');
+    }, 'doc', 'worknotes');
 
     window.session = session;
     window.preloader = SvbComponent.pagePreloader('Загрузка', '');
@@ -475,7 +481,7 @@ async function initPage (docUuid, session) {
                 observers: DM.model.observers.map((i, index) => ({ rownumber: index + 1, staffer: i.v }))
             })
                 .then((res) => {
-                    SvbComponent.pageSuccess('Сохранено', 'Прием бетона сохранен');
+                    SvbComponent.pageSuccess('Сохранено', 'Служебная записка сохранена');
                     flutterMessages()
                         .success({
                             code: res.status,
@@ -503,51 +509,99 @@ async function initPage (docUuid, session) {
             taskRow.data = taskData.instance;
         }
 
-        console.log(tables);
-
         await renderForm(DM, contentBlock, async () => {
-            return await api.update('document', 'concreterequisitions', DM.model.uuid, {
-                floor:        DM.model.floor,
-                ourfirm:      DM.model.ourfirm.v,
-                project:      DM.model.project.v,
-                storage:      DM.model.storage.v,
-                concrete:     DM.model.concrete.v,
-                measure:      DM.model.measure.v,
-                quantity:     DM.model.quantity,
-                mainproject:  DM.model.mainproject.v,
-                concretepump: DM.model.concretepump.v,
-                constructive: DM.model.constructives.v,
-                comment:      DM.model.comment,
-                purchasedate: SvbFormatter.sqlTimestamp(DM.model.docdate)
-            })
-                .then((res) => {
-                    SvbComponent.pageSuccess('Сохранено', 'Прием бетона сохранен');
-                    flutterMessages()
-                        .success({
-                            code: res.status,
-                            uuid: DM.model.uuid
-                        });
-                })
-                .catch((e) => {
-                    flutterMessages()
-                        .error({ message: e });
+            const itemsTable = {updated: [], inserted: [], deleted: DM.model.deletedItems};
+            const observersTable = { updated: [], inserted: [], deleted: [] };
+
+            DM.model.observers.map((i, index) => {
+                if (i.hasOwnProperty('uuid')) {
+                    observersTable.deleted.push(i.uuid);
+                    if (!DM.model.deletedObservers.some(el => el.hasOwnProperty('uuid') && el.uuid === i.uuid))
+                        observersTable.inserted.push({ rownumber: index + 1, staffer: i.v });
+                } else {
+                    observersTable.inserted.push({ rownumber: index + 1, staffer: i.v });
+                }
+            });
+
+            DM.model.deletedObservers.map((i) => {
+               observersTable.deleted.push(i.uuid);
+            });
+
+            const insertTasks = [];
+            const createTasks = [];
+            const updateTasks = [];
+            DM.model.items.forEach(task => {
+               if (!task.hasOwnProperty('uuid')) {
+                   createTasks.push(task);
+               } else {
+                   updateTasks.push(task);
+               }
+            });
+
+            for (const task of updateTasks) {
+                await api.update('document', 'tasks', task.taskId, {
+                    deadline:   SvbFormatter.sqlTimestamp(task.deadline),
+                    decription: task.comment,
+                    executor:   task.executor.v,
+                    draft: false,
+                }, {}, {}, {metadata: false, view: false, data: true, dataparams: {header: true}});
+            }
+
+            for (const task of createTasks) {
+                const createdTask = await api.insert('document', 'tasks', null, {
+                    author:     DM.model.author.v,
+                    deadline:   SvbFormatter.sqlTimestamp(task.deadline),
+                    decription: task.comment,
+                    executor:   task.executor.v,
+                    draft:      false,
+                    subject:    '-',
+                    type:       '74ba8a95-b787-435f-be07-8a0afc035379'
                 });
+
+                insertTasks.push(createdTask.uuid);
+            }
+
+            itemsTable.inserted = insertTasks.map((i, index) => {
+                return {rownumber: updateTasks.length + (index + 1), task: i};
+            });
+
+            return await api.update('document', 'worknotes', docUuid,
+                {
+                    scan: DM.model.scan,
+                },
+                {
+                    observers: observersTable,
+                    items: itemsTable,
+                }
+            ).then((res) => {
+                SvbComponent.pageSuccess('Сохранено', 'Служебная записка сохранена');
+                flutterMessages()
+                    .success({
+                        code: res.status,
+                        uuid: res?.result?.uuid
+                    });
+            }).catch((e) => {
+                flutterMessages()
+                    .error({ message: e });
+            });
         });
 
         DM.model.pageTitle = 'Служебная записка';
-        DM.model.observers = tables.observers.list.rows.map(i => ({ r: i.staffer.r, v: i.staffer.v }));
+        DM.model.observers = tables.observers.list.rows.map(i => ({ r: i.staffer.r, v: i.staffer.v, uuid: i.uuid }));
         DM.model.items = tables.items.list.rows.sort((a, b) => a.rownumber - b.rownumber).map((row, index) => ({
             id:       index + 1,
             uuid:     row.uuid,
             comment:  row.data.decription,
             executor: row.data.executor,
-            deadline: row.data.deadline
+            deadline: row.data.deadline,
+            taskId:   row.task.v,
         }));
         DM.model.scan = instance.scan;
         DM.model.docdate = SvbFormatter.date(instance.docdate);
         DM.model.author = { r: instance.author.r, v: instance.author.v };
 
-        window.fileUploader.setValue(DM.model.scan);
+        if (window.fileUploader)
+            window.fileUploader.setValue(DM.model.scan);
 
         window.preloader.remove();
     }

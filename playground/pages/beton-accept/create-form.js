@@ -272,23 +272,6 @@ async function initPage () {
             // const requisition = await api.instance('document', 'concreterequisitions', requisitionUuid);
             const requisition = await api.instance('document', 'concreterequisitions', requisitionUuid).then(res => res.instance);
 
-            console.log('requisition', requisition);
-
-            console.log('DM.model', DM.model);
-            console.log('window', window);
-
-            // DM.model.docnumber = requisition.docnumber;
-            // DM.model.pagetitle = `Заявка RT - №${DM.model.docnumber}`;
-            // DM.model.reqisitionData = `${requisition.attr.mainproject.r} / ${requisition.attr.project.r}
-            //  / ${requisition.attr.floor} этаж / ${requisition.attr.concrete.r}
-            //  / ${Number(requisition.attr.quantity)}м<sup>2</sup>`;
-            // DM.model.concreterequisition = { r: requisition.attr.represent, v: requisition.attr.uuid };
-            // DM.model.contractor = { r: requisition.attr.supplier.r, v: requisition.attr.supplier.v };
-            // DM.model.greenscan = requisition.attr.greenscan;
-            // DM.model.axes = requisition.attr.axes;
-            // DM.model.acceptedquantity = requisition.attr.acceptedquantity;
-            // DM.model.remains = requisition.attr.remains;
-
             DM.model.docnumber = requisition.docnumber;
             DM.model.pagetitle = `Заявка RT - №${DM.model.docnumber}`;
             DM.model.reqisitionData = `${requisition.mainproject.r} / ${requisition.project.r}
