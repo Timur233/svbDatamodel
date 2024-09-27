@@ -4,6 +4,9 @@ import SvbElement from '../../../src/components/SvbElement.js';
 import SvbComponent from '../../../src/SvbComponent.js';
 import SvbFormatter from '../../../src/utils/SvbFormatter.js';
 import {SvbAPI} from "../../../src/services/SvbAPI";
+import {FlutterMessages} from '../../../src/utils/FlutterMessages.js';
+import {FilesActions} from '../../../src/utils/FilesActions.js';
+import {checkSession, getInstanceUuid, getCookie} from '../../../src/utilities.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     await initPage();
@@ -174,13 +177,13 @@ async function renderForm (DM, contentBlock, saveCallback) {
     });
 
     fileUploader.getInstance()
-        .loadMethod = filesActions().upload.bind(fileUploader.getInstance());
+        .loadMethod = FilesActions.upload.bind(fileUploader.getInstance());
 
     fileUploader.getInstance()
-        .removeMethod = filesActions().remove.bind(fileUploader.getInstance());
+        .removeMethod = FilesActions.remove.bind(fileUploader.getInstance());
 
     fileUploader.getInstance().cameraButtonClick = () => {
-        flutterMessages().openCamera();
+        FlutterMessages.openCamera();
     };
 
     window.fileUploader = fileUploader;
@@ -273,15 +276,13 @@ async function initPage () {
                 draft: false
             }).then((res) => {
                 SvbComponent.pageSuccess('Сохранено', 'Прием бетона сохранен');
-                flutterMessages()
-                    .success({
-                        code: res.status,
-                        uuid: res?.result?.uuid
-                    });
+                FlutterMessages.success({
+                    code: res.status,
+                    uuid: res?.result?.uuid
+                });
             })
                 .catch((e) => {
-                    flutterMessages()
-                        .error({ message: e });
+                    FlutterMessages.error({ message: e });
                 });
         });
 
@@ -302,14 +303,12 @@ async function initPage () {
                 scan:         window.fileUploader.getValue()
             }).then((res) => {
                 SvbComponent.pageSuccess('Сохранено', 'Прием бетона сохранен');
-                flutterMessages()
-                    .success({
-                        code: res.status,
-                        uuid: DM.model.uuid
-                    });
+                FlutterMessages.success({
+                    code: res.status,
+                    uuid: DM.model.uuid
+                });
             }).catch((e) => {
-                flutterMessages()
-                    .error({ message: e });
+                FlutterMessages.error({ message: e });
             });
         });
 
@@ -333,110 +332,4 @@ async function initPage () {
         window.fileUploader.setValue(instanceData.scan);
         window.preloader.remove();
     }
-}
-
-function getInstanceUuid () {
-    return window.svbReqOptions.uuid;
-}
-
-function getCookie (name) {
-    const cookies = document.cookie;
-    const match = cookies.match(new RegExp('(^| )' + name + '=([^;]+)'));
-
-    if (match) {
-        return decodeURIComponent(match[2]);
-    } else {
-        return null;
-    }
-}
-
-async function checkSession (session) {
-    return await fetch('https://cab.qazaqstroy.kz/svbapi', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({
-            session,
-            type:   'system',
-            action: 'checksession',
-            name:   'users'
-        })
-    })
-        .then(res => res.json())
-        .catch(e => e);
-}
-
-function filesActions () {
-    return {
-        upload: async function (file) {
-            const formData = new FormData();
-
-            formData.append('file', file);
-
-            return fetch('https://cab.qazaqstroy.kz/files/upload', {
-                method: 'POST',
-                body:   formData
-            })
-                .then(res => res.json())
-                .then(res => ({
-                    name:  res.name,
-                    url:   res.url,
-                    value: res.url
-                }));
-        },
-        preview: async function (uuid) {
-            const response = await fetch('https://cab.qazaqstroy.kz/files/download', {
-                method: 'POST',
-                body:   JSON.stringify({ url: uuid })
-            });
-            const blob = await response.blob();
-            const reader = new FileReader();
-            const base64data = await new Promise((resolve, reject) => {
-                reader.onloadend = () => resolve(reader.result);
-                reader.onerror = reject;
-                reader.readAsDataURL(blob);
-            });
-
-            return base64data;
-        },
-        remove: async () => {}
-    };
-}
-
-function base64ToFile (base64String, fileName) {
-    const arr = base64String.split(',');
-    const mime = arr[0].match(/:(.*?);/)[1];
-    const bstr = atob(arr[1]);
-    let n = bstr.length;
-    const u8arr = new Uint8Array(n);
-
-    while (n--) {
-        u8arr[n] = bstr.charCodeAt(n);
-    }
-
-    return new File([u8arr], fileName, { type: mime });
-}
-
-function flutterMessages () {
-    return {
-        openCamera: () => {
-            try {
-                window.flutter_inappwebview.callHandler('camera', '');
-            } catch (error) { console.log(error); }
-        },
-        uploadPhoto: (file, name) => {
-            if (file) {
-                window.fileUploader.getInstance().loadFile(base64ToFile(file, name));
-            }
-        },
-        success: (message) => {
-            try {
-                window.flutter_inappwebview.callHandler('success', message);
-            } catch (error) { console.log(error); }
-        },
-        error: (message) => {
-            try {
-                window.flutter_inappwebview.callHandler('error', message);
-            } catch (error) { console.log(error); }
-        }
-    };
 }
