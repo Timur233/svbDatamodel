@@ -5,14 +5,21 @@ import prettier from 'rollup-plugin-prettier';
 const libraryConfig = defineConfig({
     build: {
         lib: {
-            entry:    path.resolve(__dirname, 'src/SvbModel.js'),
-            name:     'SvbModel',
-            fileName: format => 'SvbModel.js',
-            formats:  ['umd']
+            entry: [path.resolve(__dirname, 'src/SvbModel.js'), path.resolve(__dirname, 'src/services/SvbAPI.js')],
+            name: 'SvbModel',
+            fileName: format => `SvbModel.${format}.js`,
+            formats: ['es'],
         },
         rollupOptions: {
             external: [],
+            input: {
+              SvbModel: path.resolve(__dirname, 'src/SvbModel.js'),
+              SvbAPI: path.resolve(__dirname, 'src/services/SvbAPI.js'),
+            },
             output:   {
+                entryFileNames: '[name].js',
+                format: 'es',
+                dir: 'svb',
                 globals: {
                 }
             },
@@ -26,8 +33,20 @@ const libraryConfig = defineConfig({
                     trailingComma: 'es5',
                     printWidth:    120,
                     parser:        'babel'
-                })
-            ]
+                }),
+                //кастомный плагин, чтобы убрать export из собираемого файла
+                {
+                    name: 'replace-exports',
+                    generateBundle(options, bundle) {
+                        for (const fileName in bundle) {
+                            const chunk = bundle[fileName];
+                            if (chunk.type === 'chunk') {
+                                chunk.code = chunk.code.replace(/export\s*\{[^}]*\};/g, '');
+                            }
+                        }
+                    }
+                }
+            ],
         },
         minify:    false,
         sourcemap: false
