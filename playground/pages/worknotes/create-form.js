@@ -445,6 +445,7 @@ async function renderForm (DM, contentBlock, saveCallback) {
 async function initPage (docUuid, session) {
     const contentBlock = document.querySelector('#content-block');
     const userData     = await api.checkSession(session);
+    console.log('init page, userData', userData);
     const DM           = new SvbModel({
         session,
         pageTitle:      'Служебная записка',
@@ -517,6 +518,9 @@ async function initPage (docUuid, session) {
 
             taskRow.data = taskData.instance;
         }
+
+        DM.model.docdate = instance.docdate;
+        DM.model.author = { r: instance.author.r, v: instance.author.v };
 
         await renderForm(DM, contentBlock, async () => {
             const itemsTable = {updated: [], inserted: [], deleted: DM.model.deletedItems};
@@ -593,7 +597,7 @@ async function initPage (docUuid, session) {
             });
         });
 
-        DM.model.pageTitle = 'Служебная записка';
+        DM.model.pageTitle = instance.represent;
         DM.model.observers = tables.observers.list.rows.map(i => ({ r: i.staffer.r, v: i.staffer.v, uuid: i.uuid }));
         DM.model.items = tables.items.list.rows.sort((a, b) => a.rownumber - b.rownumber).map((row, index) => ({
             id:       index + 1,
@@ -604,8 +608,6 @@ async function initPage (docUuid, session) {
             taskId:   row.task.v,
         }));
         DM.model.scan = instance.scan;
-        DM.model.docdate = SvbFormatter.date(instance.docdate);
-        DM.model.author = { r: instance.author.r, v: instance.author.v };
 
         if (window.fileUploader)
             window.fileUploader.setValue(DM.model.scan);
